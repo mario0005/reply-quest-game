@@ -8,11 +8,13 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
+      fontFamily: {
+        serif: ["Fraunces", "Playfair Display", "Georgia", "serif"],
+        body: ["Lora", "Georgia", "serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -47,6 +49,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        paper: "hsl(var(--paper))",
+        "paper-deep": "hsl(var(--paper-deep))",
+        ink: "hsl(var(--ink))",
+        clay: "hsl(var(--clay))",
+        moss: "hsl(var(--moss))",
+        mustard: "hsl(var(--mustard))",
+        gold: "hsl(var(--gold))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -63,27 +72,29 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      boxShadow: {
+        card: "var(--shadow-card)",
+        stamp: "var(--shadow-stamp)",
+        inset: "var(--shadow-inset)",
+      },
       keyframes: {
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+        "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
+        "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
+        "stamp-in": {
+          "0%": { transform: "scale(1.6) rotate(-8deg)", opacity: "0" },
+          "60%": { transform: "scale(0.95) rotate(-3deg)", opacity: "1" },
+          "100%": { transform: "scale(1) rotate(-2deg)", opacity: "1" },
         },
-        "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+        "card-flip-in": {
+          "0%": { transform: "translateY(12px) rotate(-1deg)", opacity: "0" },
+          "100%": { transform: "translateY(0) rotate(0)", opacity: "1" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "stamp-in": "stamp-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "card-flip-in": "card-flip-in 0.35s ease-out",
       },
     },
   },
