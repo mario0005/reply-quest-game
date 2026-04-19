@@ -39,7 +39,7 @@ const Auth = () => {
       const parsed = signUpSchema.safeParse({ name, surname, email, password });
       if (!parsed.success) return setError(parsed.error.issues[0].message);
       const res = signUp(parsed.data);
-      if (!res.ok) {
+      if ("error" in res) {
         setError(res.error);
         return;
       }
@@ -49,7 +49,7 @@ const Auth = () => {
       const parsed = signInSchema.safeParse({ email, password });
       if (!parsed.success) return setError(parsed.error.issues[0].message);
       const res = signIn(parsed.data);
-      if (!res.ok) {
+      if ("error" in res) {
         setError(res.error);
         return;
       }
