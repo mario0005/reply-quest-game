@@ -1,21 +1,22 @@
 // In-memory user accounts + session, persisted to localStorage.
-// NOTE: passwords are stored in plaintext for demo purposes only.
-// Replace with Lovable Cloud auth before going to production.
+// NOTE: demo-only. Accounts are keyed by name+surname (case-insensitive).
+// Email and password are optional and not verified.
 
 export interface Account {
   id: string;
-  email: string; // lowercased
+  key: string; // `${name}|${surname}` lowercased — unique
   name: string;
   surname: string;
-  password: string; // demo only
+  email?: string;
+  password?: string;
   createdAt: string;
 }
 
 export interface SessionUser {
   id: string;
-  email: string;
   name: string;
   surname: string;
+  email?: string;
 }
 
 const ACCOUNTS_KEY = "ttq.accounts.v1";
@@ -56,38 +57,55 @@ function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function makeKey(name: string, surname: string) {
+  return `${name.trim().toLowerCase()}|${surname.trim().toLowerCase()}`;
+}
+
+function toSession(acc: Account): SessionUser {
+  return { id: acc.id, name: acc.name, surname: acc.surname, email: acc.email };
+}
+
 export const authStore = {
-  signUp(input: { email: string; password: string; name: string; surname: string }):
+  signUp(input: { name: string; surname: string; email?: string; password?: string }):
     | { ok: true; user: SessionUser }
     | { ok: false; error: string } {
-    const email = input.email.trim().toLowerCase();
-    if (accounts.some((a) => a.email === email)) {
-      return { ok: false, error: "An account with that email already exists." };
+    const name = input.name.trim();
+    const surname = input.surname.trim();
+    if (!name || !surname) return { ok: false, error: "Name and surname are required." };
+    const key = makeKey(name, surname);
+    if (accounts.some((a) => a.key === key)) {
+      return { ok: false, error: "An account with that name already exists. Try signing in." };
     }
     const acc: Account = {
       id: uid(),
-      email,
-      name: input.name.trim(),
-      surname: input.surname.trim(),
-      password: input.password,
+      key,
+      name,
+      surname,
+      email: input.email?.trim() ? input.email.trim().toLowerCase() : undefined,
+      password: input.password?.trim() ? input.password : undefined,
       createdAt: new Date().toISOString(),
     };
     accounts = [acc, ...accounts];
-    session = { id: acc.id, email: acc.email, name: acc.name, surname: acc.surname };
+    session = toSession(acc);
     persist();
     emit();
     return { ok: true, user: session };
   },
 
-  signIn(input: { email: string; password: string }):
+  signIn(input: { name: string; surname: string; password?: string }):
     | { ok: true; user: SessionUser }
     | { ok: false; error: string } {
-    const email = input.email.trim().toLowerCase();
-    const acc = accounts.find((a) => a.email === email);
-    if (!acc || acc.password !== input.password) {
-      return { ok: false, error: "Invalid email or password." };
+    const name = input.name.trim();
+    const surname = input.surname.trim();
+    if (!name || !surname) return { ok: false, error: "Name and surname are required." };
+    const key = makeKey(name, surname);
+    const acc = accounts.find((a) => a.key === key);
+    if (!acc) return { ok: false, error: "No account found. Try signing up first." };
+    // If the account has a password set, require it to match.
+    if (acc.password && acc.password !== (input.password ?? "")) {
+      return { ok: false, error: "Incorrect password." };
     }
-    session = { id: acc.id, email: acc.email, name: acc.name, surname: acc.surname };
+    session = toSession(acc);
     persist();
     emit();
     return { ok: true, user: session };

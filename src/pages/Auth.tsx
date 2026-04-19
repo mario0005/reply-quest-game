@@ -8,16 +8,17 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-const signUpSchema = z.object({
+const baseSchema = z.object({
   name: z.string().trim().min(1, "First name is required").max(60),
   surname: z.string().trim().min(1, "Surname is required").max(60),
-  email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(6, "At least 6 characters").max(100),
-});
-
-const signInSchema = z.object({
-  email: z.string().trim().email("Enter a valid email").max(255),
-  password: z.string().min(1, "Password required").max(100),
+  email: z
+    .string()
+    .trim()
+    .max(255)
+    .email("Enter a valid email")
+    .optional()
+    .or(z.literal("")),
+  password: z.string().max(100).optional().or(z.literal("")),
 });
 
 const Auth = () => {
@@ -35,27 +36,25 @@ const Auth = () => {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (mode === "signup") {
-      const parsed = signUpSchema.safeParse({ name, surname, email, password });
-      if (!parsed.success) return setError(parsed.error.issues[0].message);
-      const res = signUp(parsed.data);
-      if ("error" in res) {
-        setError(res.error);
-        return;
-      }
-      toast.success(`Welcome, ${res.user.name}!`);
-      navigate("/");
-    } else {
-      const parsed = signInSchema.safeParse({ email, password });
-      if (!parsed.success) return setError(parsed.error.issues[0].message);
-      const res = signIn(parsed.data);
-      if ("error" in res) {
-        setError(res.error);
-        return;
-      }
-      toast.success(`Welcome back, ${res.user.name}!`);
-      navigate("/");
+    const parsed = baseSchema.safeParse({ name, surname, email, password });
+    if (!parsed.success) return setError(parsed.error.issues[0].message);
+
+    const payload = {
+      name: parsed.data.name,
+      surname: parsed.data.surname,
+      email: parsed.data.email || undefined,
+      password: parsed.data.password || undefined,
+    };
+
+    const res = mode === "signup" ? signUp(payload) : signIn(payload);
+    if ("error" in res) {
+      setError(res.error);
+      return;
     }
+    toast.success(
+      mode === "signup" ? `Welcome, ${res.user.name}!` : `Welcome back, ${res.user.name}!`,
+    );
+    navigate("/");
   };
 
   return (
@@ -96,34 +95,35 @@ const Auth = () => {
           </div>
 
           <form onSubmit={submit} className="grid gap-4">
-            {mode === "signup" && (
-              <>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="name" className="font-serif text-xs uppercase tracking-widest">
-                    First name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Ada"
-                    className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="surname" className="font-serif text-xs uppercase tracking-widest">
-                    Surname
-                  </Label>
-                  <Input
-                    id="surname"
-                    value={surname}
-                    onChange={(e) => setSurname(e.target.value)}
-                    placeholder="Lovelace"
-                    className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
-                  />
-                </div>
-              </>
-            )}
+            <div className="grid gap-1.5">
+              <Label htmlFor="name" className="font-serif text-xs uppercase tracking-widest">
+                First name
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ada"
+                className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="surname" className="font-serif text-xs uppercase tracking-widest">
+                Surname
+              </Label>
+              <Input
+                id="surname"
+                value={surname}
+                onChange={(e) => setSurname(e.target.value)}
+                placeholder="Lovelace"
+                className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
+              />
+            </div>
+
+            <div className="ink-rule my-1" />
+            <p className="font-serif text-xs uppercase tracking-widest text-muted-foreground">
+              Optional
+            </p>
 
             <div className="grid gap-1.5">
               <Label htmlFor="email" className="font-serif text-xs uppercase tracking-widest">
@@ -134,7 +134,7 @@ const Auth = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ada@example.com"
+                placeholder="ada@example.com (optional)"
                 className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
               />
             </div>
@@ -147,7 +147,7 @@ const Auth = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••"
+                placeholder="(optional)"
                 className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
               />
             </div>
@@ -164,7 +164,7 @@ const Auth = () => {
           </form>
 
           <p className="mt-4 text-center font-body text-xs text-muted-foreground">
-            Demo mode · accounts kept in memory on this device only
+            Demo mode · accounts identified by name + surname on this device
           </p>
         </section>
       </div>
