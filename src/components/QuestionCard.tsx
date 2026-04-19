@@ -8,7 +8,7 @@ interface Props {
   question: Question;
   index: number;
   total: number;
-  onAnswer: (correct: boolean, pointsEarned: number) => void;
+  onAnswer: (correct: boolean, pointsEarned: number, answerText: string) => void;
 }
 
 export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
@@ -31,7 +31,14 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
     setRevealed(true);
   };
 
-  const next = () => onAnswer(wasCorrect, wasCorrect ? question.points : 0);
+  const answerText = (() => {
+    if (question.type === "multiple_choice" && selected !== null) return question.options[selected];
+    if (question.type === "true_false" && tfPick !== null) return tfPick ? "True" : "False";
+    if (question.type === "text") return text.trim();
+    return "";
+  })();
+
+  const next = () => onAnswer(wasCorrect, wasCorrect ? question.points : 0, answerText);
 
   const canSubmit =
     (question.type === "multiple_choice" && selected !== null) ||
