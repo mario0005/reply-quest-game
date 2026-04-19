@@ -1,13 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Stamp } from "@/components/Stamp";
 import { Button } from "@/components/ui/button";
 import { useResponses, useSessions } from "@/hooks/useResponsesStore";
 import { responsesStore } from "@/data/responsesStore";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 const Responses = () => {
+  const { user, isAdmin } = useAuth();
   const responses = useResponses();
   const sessions = useSessions();
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   return (
     <main className="min-h-screen px-4 py-10">
