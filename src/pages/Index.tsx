@@ -1,25 +1,27 @@
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-import { mockQuestions } from "@/data/mockQuestions";
+import { Navigate } from "react-router-dom";
 import { Stamp } from "@/components/Stamp";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Button } from "@/components/ui/button";
 import { responsesStore } from "@/data/responsesStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuestions } from "@/hooks/useQuestionsStore";
 import { toast } from "sonner";
 
 type Stage = "lobby" | "playing" | "result";
 
 const Index = () => {
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
+  const questions = useQuestions();
   const [stage, setStage] = useState<Stage>("lobby");
   const [idx, setIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
 
-  const total = mockQuestions.length;
+  const total = questions.length;
 
   if (!user) return <Navigate to="/auth" replace />;
+  if (isAdmin) return <Navigate to="/admin" replace />;
 
   const start = () => {
     setIdx(0);
@@ -29,7 +31,7 @@ const Index = () => {
   };
 
   const handleAnswer = (correct: boolean, pts: number, answerText: string) => {
-    const q = mockQuestions[idx];
+    const q = questions[idx];
     responsesStore.addResponse({
       playerName: user.name,
       playerSurname: user.surname,
@@ -139,8 +141,8 @@ const Index = () => {
             </div>
 
             <QuestionCard
-              key={mockQuestions[idx].id}
-              question={mockQuestions[idx]}
+              key={questions[idx].id}
+              question={questions[idx]}
               index={idx}
               total={total}
               onAnswer={handleAnswer}
@@ -184,10 +186,7 @@ const Index = () => {
         )}
 
         <footer className="mt-10 text-center font-body text-xs text-muted-foreground">
-          Tactile Tabletop · in-memory store ·{" "}
-          <Link to="/responses" className="underline underline-offset-4 hover:text-ink">
-            View saved responses
-          </Link>
+          Tactile Tabletop · in-memory store
         </footer>
       </div>
     </main>

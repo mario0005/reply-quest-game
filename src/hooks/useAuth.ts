@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { authStore } from "@/data/authStore";
+import { authStore, isAdmin } from "@/data/authStore";
 
 export function useAuth() {
   const user = useSyncExternalStore(
@@ -7,5 +7,11 @@ export function useAuth() {
     authStore.getSession,
     authStore.getSession,
   );
-  return { user, signIn: authStore.signIn, signUp: authStore.signUp, signOut: authStore.signOut };
+  return {
+    user,
+    isAdmin: isAdmin(user),
+    signIn: authStore.signIn,
+    signUp: authStore.signUp,
+    signOut: authStore.signOut,
+  };
 }
