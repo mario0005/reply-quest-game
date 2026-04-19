@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { mockQuestions } from "@/data/mockQuestions";
 import { Stamp } from "@/components/Stamp";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { responsesStore } from "@/data/responsesStore";
 
 type Stage = "lobby" | "playing" | "result";
 
@@ -26,11 +28,35 @@ const Index = () => {
     setStage("playing");
   };
 
-  const handleAnswer = (correct: boolean, pts: number) => {
-    setScore((s) => s + pts);
-    if (correct) setCorrectCount((c) => c + 1);
-    if (idx + 1 >= total) setStage("result");
-    else setIdx((i) => i + 1);
+  const handleAnswer = (correct: boolean, pts: number, answerText: string) => {
+    const q = mockQuestions[idx];
+    responsesStore.addResponse({
+      playerName: name.trim(),
+      playerSurname: surname.trim(),
+      questionId: q.id,
+      questionPrompt: q.prompt,
+      answer: answerText,
+      correct,
+      pointsEarned: pts,
+    });
+
+    const newScore = score + pts;
+    const newCorrect = correctCount + (correct ? 1 : 0);
+    setScore(newScore);
+    setCorrectCount(newCorrect);
+
+    if (idx + 1 >= total) {
+      responsesStore.addSession({
+        playerName: name.trim(),
+        playerSurname: surname.trim(),
+        score: newScore,
+        correctCount: newCorrect,
+        total,
+      });
+      setStage("result");
+    } else {
+      setIdx((i) => i + 1);
+    }
   };
 
   const reset = () => setStage("lobby");
@@ -168,7 +194,10 @@ const Index = () => {
         )}
 
         <footer className="mt-10 text-center font-body text-xs text-muted-foreground">
-          Tactile Tabletop · static preview
+          Tactile Tabletop · in-memory store ·{" "}
+          <Link to="/responses" className="underline underline-offset-4 hover:text-ink">
+            View saved responses
+          </Link>
         </footer>
       </div>
     </main>
