@@ -25,6 +25,36 @@ const SESSION_KEY = "ttq.session.v1";
 let accounts: Account[] = load<Account[]>(ACCOUNTS_KEY, []);
 let session: SessionUser | null = load<SessionUser | null>(SESSION_KEY, null);
 
+// Seed the built-in admin account (name "admin" / surname "admin", password "admin").
+(function seedAdmin() {
+  const adminKey = "admin|admin";
+  if (!accounts.some((a) => a.key === adminKey)) {
+    accounts = [
+      {
+        id: "admin",
+        key: adminKey,
+        name: "admin",
+        surname: "admin",
+        password: "admin",
+        createdAt: new Date().toISOString(),
+      },
+      ...accounts,
+    ];
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+      } catch {
+        // ignore
+      }
+    }
+  }
+})();
+
+export function isAdmin(user: SessionUser | null): boolean {
+  if (!user) return false;
+  return user.name.trim().toLowerCase() === "admin" && user.surname.trim().toLowerCase() === "admin";
+}
+
 type Listener = () => void;
 const listeners = new Set<Listener>();
 
