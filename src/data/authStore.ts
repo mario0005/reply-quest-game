@@ -103,6 +103,9 @@ export const authStore = {
     const surname = input.surname.trim();
     if (!name || !surname) return { ok: false, error: "Name and surname are required." };
     const key = makeKey(name, surname);
+    if (key === "admin|admin") {
+      return { ok: false, error: "That name is reserved. Please sign in instead." };
+    }
     if (accounts.some((a) => a.key === key)) {
       return { ok: false, error: "An account with that name already exists. Try signing in." };
     }
