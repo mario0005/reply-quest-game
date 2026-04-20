@@ -83,7 +83,7 @@ const Leaderboard = () => {
                   className={cn(
                     "flex items-center gap-4 rounded-lg border-2 px-4 py-3 transition-colors",
                     isCurrentUser(entry)
-                      ? "border-ochre bg-ochre/10"
+                      ? "border-mustard bg-mustard/10"
                       : "border-transparent bg-paper-deep/40 hover:bg-paper-deep/60",
                   )}
                 >
@@ -94,7 +94,7 @@ const Leaderboard = () => {
                     <p className="truncate font-serif font-semibold">
                       {entry.playerName} {entry.playerSurname}
                       {isCurrentUser(entry) && (
-                        <span className="ml-2 font-body text-xs text-ochre">(You)</span>
+                        <span className="ml-2 font-body text-xs text-mustard">(You)</span>
                       )}
                     </p>
                     <p className="font-body text-xs text-muted-foreground">
