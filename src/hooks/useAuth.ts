@@ -13,5 +13,7 @@ export function useAuth() {
     signIn: authStore.signIn,
     signUp: authStore.signUp,
     signOut: authStore.signOut,
+    updateProfile: authStore.updateProfile,
+    deleteCurrentAccount: authStore.deleteCurrentAccount,
   };
 }
