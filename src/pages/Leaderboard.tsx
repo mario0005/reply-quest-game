@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Trophy, Medal, Award } from "lucide-react";
 
 const Leaderboard = () => {
-  const { user } = useAuth();
+  const { user, isAdmin: checkIsAdmin } = useAuth();
   const sessions = useSessions();
 
   // Sort by score descending, then by correct count
@@ -40,6 +40,8 @@ const Leaderboard = () => {
     if (!user) return false;
     return user.name === session.playerName && user.surname === session.playerSurname;
   };
+
+  const userIsAdmin = user ? checkIsAdmin(user) : false;
 
   return (
     <main className="min-h-screen px-4 py-10">
@@ -111,7 +113,7 @@ const Leaderboard = () => {
           )}
         </section>
 
-        {user && (
+        {user && !userIsAdmin && (
           <div className="mt-6 text-center">
             <Link
               to="/"
