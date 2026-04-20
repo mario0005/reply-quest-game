@@ -49,7 +49,7 @@ const Leaderboard = () => {
       />
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-8 text-center">
-          <Stamp tone="ochre" className="mb-4">Rankings</Stamp>
+          <Stamp tone="mustard" className="mb-4">Rankings</Stamp>
           <h1 className="font-serif text-4xl font-black md:text-5xl">Leaderboard</h1>
           <p className="mx-auto mt-3 max-w-md font-body text-sm text-muted-foreground">
             The best scores from every player who has taken the challenge.
@@ -111,7 +111,7 @@ const Leaderboard = () => {
           )}
         </section>
 
-        {user && !user.isAdmin && (
+        {user && (
           <div className="mt-6 text-center">
             <Link
               to="/"
