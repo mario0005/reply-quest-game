@@ -111,19 +111,19 @@ const Admin = () => {
                     variant="outline"
                     onClick={() => setEditingId(editingId === q.id ? null : q.id)}
                   >
-                    {editingId === q.id ? "Close" : "Edit"}
+                    {editingId === q.id ? t("common.close") : t("common.edit")}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => {
-                      if (confirm("Delete this question?")) {
+                      if (confirm(t("admin.deleteConfirm"))) {
                         questionsStore.remove(q.id);
-                        toast.success("Deleted");
+                        toast.success(t("admin.deleted"));
                       }
                     }}
                   >
-                    Delete
+                    {t("common.delete")}
                   </Button>
                 </div>
               </div>
@@ -131,10 +131,10 @@ const Admin = () => {
               <p className="mt-1 font-body text-sm text-muted-foreground">
                 {q.type === "multiple_choice" &&
                   `Options: ${q.options.join(", ")} · Correct: ${q.options[q.correctIndex]}`}
-                {q.type === "true_false" && `Correct: ${q.correct ? "True" : "False"}`}
+                {q.type === "true_false" && `Correct: ${q.correct ? t("index.true") : t("index.false")}`}
                 {q.type === "text" && `Accepted: ${q.acceptedAnswers.join(", ")}`}
                 {" · "}
-                {q.points} pts
+                {q.points} {t("index.points")}
               </p>
 
               {editingId === q.id && <Editor question={q} onDone={() => setEditingId(null)} />}

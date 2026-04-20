@@ -1,13 +1,16 @@
 import { Link, Navigate } from "react-router-dom";
 import { Stamp } from "@/components/Stamp";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { useResponses, useSessions } from "@/hooks/useResponsesStore";
 import { responsesStore } from "@/data/responsesStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 
 const Responses = () => {
   const { user, isAdmin } = useAuth();
+  const { t } = useTranslation();
   const responses = useResponses();
   const sessions = useSessions();
 
