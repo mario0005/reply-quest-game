@@ -150,6 +150,51 @@ export const authStore = {
     emit();
   },
 
+  updateProfile(input: { email?: string; password?: string }):
+    | { ok: true; user: SessionUser }
+    | { ok: false; error: string } {
+    if (!session) return { ok: false, error: "Not signed in." };
+    const idx = accounts.findIndex((a) => a.id === session!.id);
+    if (idx === -1) return { ok: false, error: "Account not found." };
+    const acc = accounts[idx];
+    const updated: Account = {
+      ...acc,
+      email: input.email && input.email.trim() ? input.email.trim().toLowerCase() : undefined,
+      password: input.password && input.password.trim() ? input.password : acc.password,
+    };
+    accounts = [...accounts.slice(0, idx), updated, ...accounts.slice(idx + 1)];
+    session = toSession(updated);
+    persist();
+    emit();
+    return { ok: true, user: session };
+  },
+
+  clearPassword(): { ok: true } | { ok: false; error: string } {
+    if (!session) return { ok: false, error: "Not signed in." };
+    const idx = accounts.findIndex((a) => a.id === session!.id);
+    if (idx === -1) return { ok: false, error: "Account not found." };
+    accounts = [
+      ...accounts.slice(0, idx),
+      { ...accounts[idx], password: undefined },
+      ...accounts.slice(idx + 1),
+    ];
+    persist();
+    emit();
+    return { ok: true };
+  },
+
+  deleteCurrentAccount(): { ok: true } | { ok: false; error: string } {
+    if (!session) return { ok: false, error: "Not signed in." };
+    if (session.name.trim().toLowerCase() === "admin" && session.surname.trim().toLowerCase() === "admin") {
+      return { ok: false, error: "The admin account cannot be deleted." };
+    }
+    accounts = accounts.filter((a) => a.id !== session!.id);
+    session = null;
+    persist();
+    emit();
+    return { ok: true };
+  },
+
   getSession() {
     return session;
   },

@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
 import { Stamp } from "@/components/Stamp";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useSessions } from "@/hooks/useResponsesStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { Trophy, Medal, Award } from "lucide-react";
 
 const Leaderboard = () => {
   const { user, isAdmin } = useAuth();
+  const { t } = useTranslation();
   const sessions = useSessions();
 
   // Sort by score descending, then by correct count
@@ -48,21 +51,24 @@ const Leaderboard = () => {
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Lora:wght@400;500;600&display=swap"
       />
       <div className="mx-auto w-full max-w-2xl">
+        <div className="mb-4 flex justify-end">
+          <LanguageToggle />
+        </div>
         <header className="mb-8 text-center">
-          <Stamp tone="mustard" className="mb-4">Rankings</Stamp>
-          <h1 className="font-serif text-4xl font-black md:text-5xl">Leaderboard</h1>
+          <Stamp tone="mustard" className="mb-4">{t("lb.stamp")}</Stamp>
+          <h1 className="font-serif text-4xl font-black md:text-5xl">{t("lb.title")}</h1>
           <p className="mx-auto mt-3 max-w-md font-body text-sm text-muted-foreground">
-            The best scores from every player who has taken the challenge.
+            {t("lb.subtitle")}
           </p>
         </header>
 
         <div className="mb-6 flex items-center justify-between">
           <Link to="/" className="font-serif text-sm underline underline-offset-4">
-            ← Back to game
+            {t("common.backToGame")}
           </Link>
           {user && (
             <span className="font-body text-sm text-muted-foreground">
-              Playing as <span className="font-semibold">{user.name} {user.surname}</span>
+              {t("lb.playingAs")} <span className="font-semibold">{user.name} {user.surname}</span>
             </span>
           )}
         </div>
@@ -70,9 +76,9 @@ const Leaderboard = () => {
         <section className="paper-card p-6">
           {leaderboardEntries.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="font-body text-muted-foreground">No scores yet.</p>
+              <p className="font-body text-muted-foreground">{t("lb.empty")}</p>
               <p className="mt-2 font-body text-sm text-muted-foreground">
-                Be the first to play and claim the top spot!
+                {t("lb.emptyHint")}
               </p>
             </div>
           ) : (
@@ -94,16 +100,16 @@ const Leaderboard = () => {
                     <p className="truncate font-serif font-semibold">
                       {entry.playerName} {entry.playerSurname}
                       {isCurrentUser(entry) && (
-                        <span className="ml-2 font-body text-xs text-mustard">(You)</span>
+                        <span className="ml-2 font-body text-xs text-mustard">{t("common.you")}</span>
                       )}
                     </p>
                     <p className="font-body text-xs text-muted-foreground">
-                      {entry.correctCount}/{entry.total} correct
+                      {entry.correctCount}/{entry.total} {t("lb.correctOf")}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-serif text-lg font-bold">{entry.score}</p>
-                    <p className="font-body text-xs text-muted-foreground">pts</p>
+                    <p className="font-body text-xs text-muted-foreground">{t("index.points")}</p>
                   </div>
                 </li>
               ))}
@@ -117,7 +123,7 @@ const Leaderboard = () => {
               to="/"
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 font-body text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              Play again
+              {t("result.playAgain")}
             </Link>
           </div>
         )}

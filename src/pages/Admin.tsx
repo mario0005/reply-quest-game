@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Stamp } from "@/components/Stamp";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuestions } from "@/hooks/useQuestionsStore";
+import { useTranslation } from "@/hooks/useTranslation";
 import { questionsStore } from "@/data/questionsStore";
 import type { Question } from "@/data/mockQuestions";
 import { toast } from "sonner";
 
 const Admin = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const { t } = useTranslation();
   const questions = useQuestions();
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -27,7 +30,7 @@ const Admin = () => {
         ? { type: "true_false" as const, prompt: "New question", correct: true, points: 5 }
         : { type: "text" as const, prompt: "New question", acceptedAnswers: ["answer"], points: 10 };
     questionsStore.add(base);
-    toast.success("Question added");
+    toast.success(t("admin.added"));
   };
 
   return (
@@ -38,50 +41,59 @@ const Admin = () => {
       />
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-6 flex items-center justify-between font-serif text-sm">
-          <Link to="/" className="underline underline-offset-4">← Back</Link>
-          <Button variant="outline" size="sm" onClick={() => { signOut(); toast.success("Signed out"); }}>
-            Sign out
-          </Button>
+          <Link to="/" className="underline underline-offset-4">{t("common.back")}</Link>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
+            <Link
+              to="/account"
+              className="text-primary underline underline-offset-4 hover:text-primary/80"
+            >
+              {t("nav.account")}
+            </Link>
+            <Button variant="outline" size="sm" onClick={() => { signOut(); toast.success(t("result.signedOut")); }}>
+              {t("common.signOut")}
+            </Button>
+          </div>
         </div>
 
         <header className="mb-8 text-center">
-          <Stamp tone="clay" className="mb-4">Admin</Stamp>
-          <h1 className="font-serif text-4xl font-black md:text-5xl">Curate the Deck</h1>
+          <Stamp tone="clay" className="mb-4">{t("admin.stamp")}</Stamp>
+          <h1 className="font-serif text-4xl font-black md:text-5xl">{t("admin.title")}</h1>
           <p className="mt-3 font-body text-sm text-muted-foreground">
-            Edit, add, or remove the questions players will see.
+            {t("admin.subtitle")}
           </p>
         </header>
 
         <section className="paper-card mb-6 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-serif text-xl font-bold">{questions.length} questions</h2>
+            <h2 className="font-serif text-xl font-bold">{questions.length} {t("admin.questions")}</h2>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" onClick={() => addNew("multiple_choice")}>
-                + Multiple choice
+                {t("admin.addMC")}
               </Button>
               <Button size="sm" variant="outline" onClick={() => addNew("true_false")}>
-                + True / False
+                {t("admin.addTF")}
               </Button>
               <Button size="sm" variant="outline" onClick={() => addNew("text")}>
-                + Text
+                {t("admin.addText")}
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  if (confirm("Reset all questions to defaults?")) {
+                  if (confirm(t("admin.resetConfirm"))) {
                     questionsStore.resetToDefaults();
-                    toast.success("Questions reset");
+                    toast.success(t("admin.resetDone"));
                   }
                 }}
               >
-                Reset to defaults
+                {t("admin.reset")}
               </Button>
             </div>
           </div>
           <p className="mt-3">
             <Link to="/responses" className="font-serif text-sm underline underline-offset-4">
-              → View all player responses
+              {t("admin.viewResponses")}
             </Link>
           </p>
         </section>
@@ -99,19 +111,19 @@ const Admin = () => {
                     variant="outline"
                     onClick={() => setEditingId(editingId === q.id ? null : q.id)}
                   >
-                    {editingId === q.id ? "Close" : "Edit"}
+                    {editingId === q.id ? t("common.close") : t("common.edit")}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => {
-                      if (confirm("Delete this question?")) {
+                      if (confirm(t("admin.deleteConfirm"))) {
                         questionsStore.remove(q.id);
-                        toast.success("Deleted");
+                        toast.success(t("admin.deleted"));
                       }
                     }}
                   >
-                    Delete
+                    {t("common.delete")}
                   </Button>
                 </div>
               </div>
@@ -119,10 +131,10 @@ const Admin = () => {
               <p className="mt-1 font-body text-sm text-muted-foreground">
                 {q.type === "multiple_choice" &&
                   `Options: ${q.options.join(", ")} · Correct: ${q.options[q.correctIndex]}`}
-                {q.type === "true_false" && `Correct: ${q.correct ? "True" : "False"}`}
+                {q.type === "true_false" && `Correct: ${q.correct ? t("index.true") : t("index.false")}`}
                 {q.type === "text" && `Accepted: ${q.acceptedAnswers.join(", ")}`}
                 {" · "}
-                {q.points} pts
+                {q.points} {t("index.points")}
               </p>
 
               {editingId === q.id && <Editor question={q} onDone={() => setEditingId(null)} />}
