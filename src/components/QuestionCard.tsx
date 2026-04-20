@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Question } from "@/data/mockQuestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<number | null>(null);
   const [tfPick, setTfPick] = useState<boolean | null>(null);
   const [text, setText] = useState("");
@@ -33,7 +35,7 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
 
   const answerText = (() => {
     if (question.type === "multiple_choice" && selected !== null) return question.options[selected];
-    if (question.type === "true_false" && tfPick !== null) return tfPick ? "True" : "False";
+    if (question.type === "true_false" && tfPick !== null) return tfPick ? t("index.true") : t("index.false");
     if (question.type === "text") return text.trim();
     return "";
   })();
@@ -49,10 +51,10 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
     <div className="paper-card animate-card-flip-in p-6 md:p-8">
       <div className="mb-4 flex items-center justify-between">
         <span className="font-serif text-xs uppercase tracking-[0.25em] text-muted-foreground">
-          Card {index + 1} / {total}
+          {t("index.cardOf")} {index + 1} / {total}
         </span>
         <span className="rounded-full border border-mustard/40 bg-mustard/15 px-2.5 py-0.5 font-serif text-xs font-semibold text-ink">
-          {question.points} pts
+          {question.points} {t("index.points")}
         </span>
       </div>
 
@@ -116,7 +118,7 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
                   revealed && "cursor-default hover:translate-y-0",
                 )}
               >
-                {v ? "True" : "False"}
+                {v ? t("index.true") : t("index.false")}
               </button>
             );
           })}
@@ -129,7 +131,7 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={revealed}
-            placeholder="Write your answer…"
+            placeholder={t("index.writeAnswer")}
             className="h-12 border-2 bg-paper-deep/40 font-serif text-lg shadow-inset"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !revealed && canSubmit) submit();
@@ -137,7 +139,8 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
           />
           {revealed && (
             <p className="mt-3 font-body text-sm text-muted-foreground">
-              Accepted: <span className="font-semibold text-ink">{question.acceptedAnswers[0]}</span>
+              {t("index.accepted")}{" "}
+              <span className="font-semibold text-ink">{question.acceptedAnswers[0]}</span>
             </p>
           )}
         </div>
@@ -153,10 +156,10 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
                 : "border-destructive bg-destructive/15 text-destructive",
             )}
           >
-            {wasCorrect ? `+${question.points}` : "No points"}
+            {wasCorrect ? `+${question.points}` : t("index.noPoints")}
           </span>
           <span className="font-body text-sm text-muted-foreground">
-            {wasCorrect ? "Well played." : "Better luck on the next card."}
+            {wasCorrect ? t("index.wellPlayed") : t("index.betterLuck")}
           </span>
         </div>
       )}
@@ -164,11 +167,11 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
       <div className="mt-7 flex justify-end">
         {!revealed ? (
           <Button size="lg" onClick={submit} disabled={!canSubmit} className="font-serif tracking-wide shadow-stamp">
-            Submit answer
+            {t("index.submit")}
           </Button>
         ) : (
           <Button size="lg" onClick={next} className="font-serif tracking-wide shadow-stamp">
-            {index + 1 === total ? "See result" : "Next card →"}
+            {index + 1 === total ? t("index.seeResult") : t("index.next")}
           </Button>
         )}
       </div>
