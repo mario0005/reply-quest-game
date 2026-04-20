@@ -30,9 +30,9 @@ const Leaderboard = () => {
   });
 
   const getRankIcon = (index: number) => {
-    if (index === 0) return <Trophy className="h-5 w-5 text-yellow-500" />;
-    if (index === 1) return <Medal className="h-5 w-5 text-slate-400" />;
-    if (index === 2) return <Award className="h-5 w-5 text-amber-600" />;
+    if (index === 0) return <Trophy className="h-5 w-5 text-mustard" />;
+    if (index === 1) return <Medal className="h-5 w-5 text-muted-foreground" />;
+    if (index === 2) return <Award className="h-5 w-5 text-accent" />;
     return <span className="font-serif text-lg font-bold text-muted-foreground">{index + 1}</span>;
   };
 
