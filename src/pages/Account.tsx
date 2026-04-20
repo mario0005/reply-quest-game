@@ -28,23 +28,27 @@ const Account = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  if (!user) return <Navigate to="/auth" replace />;
-
   const mySessions = useMemo(
     () =>
-      sessions.filter(
-        (s) => s.playerName === user.name && s.playerSurname === user.surname,
-      ),
-    [sessions, user.name, user.surname],
+      user
+        ? sessions.filter(
+            (s) => s.playerName === user.name && s.playerSurname === user.surname,
+          )
+        : [],
+    [sessions, user],
   );
 
   const myResponses = useMemo(
     () =>
-      responses.filter(
-        (r) => r.playerName === user.name && r.playerSurname === user.surname,
-      ),
-    [responses, user.name, user.surname],
+      user
+        ? responses.filter(
+            (r) => r.playerName === user.name && r.playerSurname === user.surname,
+          )
+        : [],
+    [responses, user],
   );
+
+  if (!user) return <Navigate to="/auth" replace />;
 
   const bestScore = mySessions.reduce((max, s) => Math.max(max, s.score), 0);
   const totalCorrect = myResponses.filter((r) => r.correct).length;
