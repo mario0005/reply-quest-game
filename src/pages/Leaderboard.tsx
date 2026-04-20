@@ -1,12 +1,15 @@
 import { Link } from "react-router-dom";
 import { Stamp } from "@/components/Stamp";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useSessions } from "@/hooks/useResponsesStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { Trophy, Medal, Award } from "lucide-react";
 
 const Leaderboard = () => {
   const { user, isAdmin } = useAuth();
+  const { t } = useTranslation();
   const sessions = useSessions();
 
   // Sort by score descending, then by correct count
