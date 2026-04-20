@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Stamp } from "@/components/Stamp";
 import { QuestionCard } from "@/components/QuestionCard";
 import { Button } from "@/components/ui/button";
@@ -77,12 +77,20 @@ const Index = () => {
 
       <div className="mx-auto w-full max-w-2xl">
         <div className="mb-6 flex items-center justify-between font-serif text-sm">
-          <span className="text-muted-foreground">
-            Signed in as{" "}
-            <span className="font-semibold text-ink">
-              {user.name} {user.surname}
+          <div className="flex items-center gap-4">
+            <span className="text-muted-foreground">
+              Signed in as{" "}
+              <span className="font-semibold text-ink">
+                {user.name} {user.surname}
+              </span>
             </span>
-          </span>
+            <Link
+              to="/leaderboard"
+              className="text-primary underline underline-offset-4 hover:text-primary/80"
+            >
+              Leaderboard →
+            </Link>
+          </div>
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             Sign out
           </Button>
