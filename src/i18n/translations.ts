@@ -129,6 +129,16 @@ export const translations = {
     "admin.exportCSV": "Download CSV",
     "admin.exportXLSX": "Download Excel",
     "admin.exportDone": "Export downloaded",
+    "admin.feedback": "Answer feedback messages",
+    "admin.feedbackHint": "Customize the text players see after submitting an answer.",
+    "admin.fbWellPlayed": "Correct answer message",
+    "admin.fbBetterLuck": "Wrong answer message",
+    "admin.fbNoPoints": "Wrong answer badge",
+    "admin.fbResetDefaults": "Reset to defaults",
+    "admin.fbSaved": "Feedback messages saved",
+    "admin.fbResetDone": "Feedback messages reset",
+    "admin.fbLangEN": "English",
+    "admin.fbLangIT": "Italian",
 
     // Responses
     "resp.stamp": "Ledger",
@@ -270,6 +280,16 @@ export const translations = {
     "admin.exportCSV": "Scarica CSV",
     "admin.exportXLSX": "Scarica Excel",
     "admin.exportDone": "Esportazione scaricata",
+    "admin.feedback": "Messaggi di feedback risposta",
+    "admin.feedbackHint": "Personalizza il testo che i giocatori vedono dopo aver inviato una risposta.",
+    "admin.fbWellPlayed": "Messaggio risposta corretta",
+    "admin.fbBetterLuck": "Messaggio risposta sbagliata",
+    "admin.fbNoPoints": "Etichetta risposta sbagliata",
+    "admin.fbResetDefaults": "Ripristina predefiniti",
+    "admin.fbSaved": "Messaggi salvati",
+    "admin.fbResetDone": "Messaggi ripristinati",
+    "admin.fbLangEN": "Inglese",
+    "admin.fbLangIT": "Italiano",
 
     // Responses
     "resp.stamp": "Registro",
