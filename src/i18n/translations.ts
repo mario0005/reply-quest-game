@@ -80,9 +80,6 @@ export const translations = {
     "footer.privacy": "Privacy",
     "footer.cookies": "Cookies",
 
-    // Footer
-    "footer.tag": "Tactile Tabletop · in-memory store",
-
     // Leaderboard
     "lb.stamp": "Rankings",
     "lb.title": "Leaderboard",
@@ -218,9 +215,6 @@ export const translations = {
     "footer.tag": "Tactile Tabletop · archivio in memoria",
     "footer.privacy": "Privacy",
     "footer.cookies": "Cookies",
-
-    // Footer
-    "footer.tag": "Tactile Tabletop · archivio in memoria",
 
     // Leaderboard
     "lb.stamp": "Classifica",
