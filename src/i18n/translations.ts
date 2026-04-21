@@ -77,6 +77,8 @@ export const translations = {
 
     // Footer
     "footer.tag": "Tactile Tabletop · in-memory store",
+    "footer.privacy": "Privacy",
+    "footer.cookies": "Cookies",
 
     // Leaderboard
     "lb.stamp": "Rankings",
@@ -211,6 +213,8 @@ export const translations = {
 
     // Footer
     "footer.tag": "Tactile Tabletop · archivio in memoria",
+    "footer.privacy": "Privacy",
+    "footer.cookies": "Cookies",
 
     // Leaderboard
     "lb.stamp": "Classifica",
