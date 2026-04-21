@@ -10,7 +10,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuestions } from "@/hooks/useQuestionsStore";
 import { useTranslation } from "@/hooks/useTranslation";
 import { questionsStore } from "@/data/questionsStore";
+import { responsesStore } from "@/data/responsesStore";
 import type { Question } from "@/data/mockQuestions";
+import { exportData, type ExportFormat } from "@/lib/exportData";
 import { toast } from "sonner";
 
 const Admin = () => {
@@ -31,6 +33,11 @@ const Admin = () => {
         : { type: "text" as const, prompt: "New question", acceptedAnswers: ["answer"], points: 10 };
     questionsStore.add(base);
     toast.success(t("admin.added"));
+  };
+
+  const handleExport = (format: ExportFormat) => {
+    exportData(format, responsesStore.getResponses(), responsesStore.getSessions());
+    toast.success(t("admin.exportDone"));
   };
 
   return (
@@ -96,6 +103,25 @@ const Admin = () => {
               {t("admin.viewResponses")}
             </Link>
           </p>
+        </section>
+
+        <section className="paper-card mb-6 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="font-serif text-xl font-bold">{t("admin.export")}</h2>
+              <p className="mt-1 font-body text-sm text-muted-foreground">
+                {t("admin.exportHint")}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => handleExport("csv")}>
+                {t("admin.exportCSV")}
+              </Button>
+              <Button size="sm" onClick={() => handleExport("xlsx")} className="font-serif tracking-wide shadow-stamp">
+                {t("admin.exportXLSX")}
+              </Button>
+            </div>
+          </div>
         </section>
 
         <ul className="grid gap-4">
