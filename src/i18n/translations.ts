@@ -124,6 +124,11 @@ export const translations = {
     "admin.resetConfirm": "Reset all questions to defaults?",
     "admin.deleteConfirm": "Delete this question?",
     "admin.resetDone": "Questions reset",
+    "admin.export": "Export data",
+    "admin.exportHint": "Download all responses, sessions and leaderboard.",
+    "admin.exportCSV": "Download CSV",
+    "admin.exportXLSX": "Download Excel",
+    "admin.exportDone": "Export downloaded",
 
     // Responses
     "resp.stamp": "Ledger",
@@ -260,6 +265,11 @@ export const translations = {
     "admin.resetConfirm": "Ripristinare tutte le domande?",
     "admin.deleteConfirm": "Eliminare questa domanda?",
     "admin.resetDone": "Domande ripristinate",
+    "admin.export": "Esporta dati",
+    "admin.exportHint": "Scarica tutte le risposte, le partite e la classifica.",
+    "admin.exportCSV": "Scarica CSV",
+    "admin.exportXLSX": "Scarica Excel",
+    "admin.exportDone": "Esportazione scaricata",
 
     // Responses
     "resp.stamp": "Registro",
