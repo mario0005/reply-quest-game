@@ -128,6 +128,7 @@ const Admin = () => {
 
         <FeedbackEditor />
 
+        <ul className="grid gap-4">
           {questions.map((q, i) => (
             <li key={q.id} className="paper-card p-5">
               <div className="mb-3 flex items-center justify-between">
