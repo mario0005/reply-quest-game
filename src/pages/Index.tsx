@@ -206,7 +206,16 @@ const Index = () => {
         )}
 
         <footer className="mt-10 text-center font-body text-xs text-muted-foreground">
-          {t("footer.tag")}
+          <p>{t("footer.tag")}</p>
+          <div className="mt-2 flex items-center justify-center gap-3">
+            <Link to="/privacy" className="text-primary underline underline-offset-4 hover:text-primary/80">
+              {t("footer.privacy")}
+            </Link>
+            <span>·</span>
+            <Link to="/cookies" className="text-primary underline underline-offset-4 hover:text-primary/80">
+              {t("footer.cookies")}
+            </Link>
+          </div>
         </footer>
       </div>
     </main>

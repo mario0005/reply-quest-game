@@ -77,6 +77,11 @@ export const translations = {
 
     // Footer
     "footer.tag": "Tactile Tabletop · in-memory store",
+    "footer.privacy": "Privacy",
+    "footer.cookies": "Cookies",
+
+    // Footer
+    "footer.tag": "Tactile Tabletop · in-memory store",
 
     // Leaderboard
     "lb.stamp": "Rankings",
@@ -208,6 +213,11 @@ export const translations = {
     "result.cards": "Carte",
     "result.playAgain": "Gioca ancora",
     "result.signedOut": "Disconnesso",
+
+    // Footer
+    "footer.tag": "Tactile Tabletop · archivio in memoria",
+    "footer.privacy": "Privacy",
+    "footer.cookies": "Cookies",
 
     // Footer
     "footer.tag": "Tactile Tabletop · archivio in memoria",
