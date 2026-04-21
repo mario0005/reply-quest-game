@@ -3,6 +3,7 @@ import type { Question } from "@/data/mockQuestions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useFeedbackData } from "@/hooks/useFeedbackMessages";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -13,7 +14,8 @@ interface Props {
 }
 
 export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const feedback = useFeedbackData()[lang];
   const [selected, setSelected] = useState<number | null>(null);
   const [tfPick, setTfPick] = useState<boolean | null>(null);
   const [text, setText] = useState("");
@@ -156,10 +158,10 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
                 : "border-destructive bg-destructive/15 text-destructive",
             )}
           >
-            {wasCorrect ? `+${question.points}` : t("index.noPoints")}
+            {wasCorrect ? `+${question.points}` : feedback.noPoints}
           </span>
           <span className="font-body text-sm text-muted-foreground">
-            {wasCorrect ? t("index.wellPlayed") : t("index.betterLuck")}
+            {wasCorrect ? feedback.wellPlayed : feedback.betterLuck}
           </span>
         </div>
       )}
