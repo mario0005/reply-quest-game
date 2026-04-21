@@ -11,6 +11,8 @@ import { useQuestions } from "@/hooks/useQuestionsStore";
 import { useTranslation } from "@/hooks/useTranslation";
 import { questionsStore } from "@/data/questionsStore";
 import { responsesStore } from "@/data/responsesStore";
+import { feedbackStore } from "@/data/feedbackStore";
+import { useFeedbackData } from "@/hooks/useFeedbackMessages";
 import type { Question } from "@/data/mockQuestions";
 import { exportData, type ExportFormat } from "@/lib/exportData";
 import { toast } from "sonner";
@@ -124,7 +126,8 @@ const Admin = () => {
           </div>
         </section>
 
-        <ul className="grid gap-4">
+        <FeedbackEditor />
+
           {questions.map((q, i) => (
             <li key={q.id} className="paper-card p-5">
               <div className="mb-3 flex items-center justify-between">
