@@ -275,4 +275,82 @@ const Editor = ({ question, onDone }: { question: Question; onDone: () => void }
   );
 };
 
+const FeedbackEditor = () => {
+  const { t } = useTranslation();
+  const data = useFeedbackData();
+
+  const handleChange = (lang: "en" | "it", field: "wellPlayed" | "betterLuck" | "noPoints", value: string) => {
+    feedbackStore.update(lang, { [field]: value });
+  };
+
+  return (
+    <section className="paper-card mb-6 p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-serif text-xl font-bold">{t("admin.feedback")}</h2>
+          <p className="mt-1 font-body text-sm text-muted-foreground">
+            {t("admin.feedbackHint")}
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            feedbackStore.resetToDefaults();
+            toast.success(t("admin.fbResetDone"));
+          }}
+        >
+          {t("admin.fbResetDefaults")}
+        </Button>
+      </div>
+
+      <div className="ink-rule my-4" />
+
+      <div className="grid gap-5 md:grid-cols-2">
+        {(["en", "it"] as const).map((lang) => (
+          <div key={lang} className="grid gap-3 rounded-md border-2 bg-paper-deep/40 p-4">
+            <h3 className="font-serif text-sm font-bold uppercase tracking-widest text-muted-foreground">
+              {lang === "en" ? t("admin.fbLangEN") : t("admin.fbLangIT")}
+            </h3>
+            <div className="grid gap-1.5">
+              <Label className="font-serif text-xs uppercase tracking-widest">
+                {t("admin.fbWellPlayed")}
+              </Label>
+              <Input
+                value={data[lang].wellPlayed}
+                onChange={(e) => handleChange(lang, "wellPlayed", e.target.value)}
+                onBlur={() => toast.success(t("admin.fbSaved"))}
+                className="h-10 border-2 bg-background"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="font-serif text-xs uppercase tracking-widest">
+                {t("admin.fbBetterLuck")}
+              </Label>
+              <Input
+                value={data[lang].betterLuck}
+                onChange={(e) => handleChange(lang, "betterLuck", e.target.value)}
+                onBlur={() => toast.success(t("admin.fbSaved"))}
+                className="h-10 border-2 bg-background"
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <Label className="font-serif text-xs uppercase tracking-widest">
+                {t("admin.fbNoPoints")}
+              </Label>
+              <Input
+                value={data[lang].noPoints}
+                onChange={(e) => handleChange(lang, "noPoints", e.target.value)}
+                onBlur={() => toast.success(t("admin.fbSaved"))}
+                className="h-10 border-2 bg-background"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
 export default Admin;
+
