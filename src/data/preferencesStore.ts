@@ -4,11 +4,37 @@ import { useSyncExternalStore } from "react";
 export type DietType = "omnivore" | "vegetarian" | "vegan" | "pescatarian" | "other";
 export type SpiceLevel = "none" | "mild" | "medium" | "hot";
 
+export type FavoriteDish =
+  | "pizza"
+  | "pasta"
+  | "sushi"
+  | "burger"
+  | "salad"
+  | "tacos"
+  | "ramen"
+  | "curry"
+  | "steak"
+  | "risotto"
+  | "dumplings"
+  | "sandwich"
+  | "soup"
+  | "bbq"
+  | "seafood"
+  | "dessert";
+
+export const FAVORITE_DISHES: FavoriteDish[] = [
+  "pizza", "pasta", "sushi", "burger", "salad", "tacos", "ramen", "curry",
+  "steak", "risotto", "dumplings", "sandwich", "soup", "bbq", "seafood", "dessert",
+];
+
+export const MAX_FAVORITE_DISHES = 5;
+
 export interface DietaryPreferences {
   diet: DietType;
   allergies: string; // free text, comma-separated
   spice: SpiceLevel;
   dislikes: string; // free text
+  favoriteDishes: FavoriteDish[];
 }
 
 export const defaultPreferences: DietaryPreferences = {
@@ -16,17 +42,26 @@ export const defaultPreferences: DietaryPreferences = {
   allergies: "",
   spice: "medium",
   dislikes: "",
+  favoriteDishes: [],
 };
 
 const STORAGE_KEY = "ttq.preferences.v1";
 
 type Store = Record<string, DietaryPreferences>;
 
+function normalize(p: Partial<DietaryPreferences> | null | undefined): DietaryPreferences {
+  return { ...defaultPreferences, ...(p ?? {}), favoriteDishes: p?.favoriteDishes ?? [] };
+}
+
 function load(): Store {
   if (typeof window === "undefined") return {};
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Store) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, Partial<DietaryPreferences>>;
+    const out: Store = {};
+    for (const [k, v] of Object.entries(parsed)) out[k] = normalize(v);
+    return out;
   } catch {
     return {};
   }
