@@ -301,6 +301,7 @@ export const translations = {
     "footer.tag": "Tactile Tabletop · archivio in memoria",
     "footer.privacy": "Privacy",
     "footer.cookies": "Cookies",
+    "footer.rules": "Regole",
 
     // Leaderboard
     "lb.stamp": "Classifica",
