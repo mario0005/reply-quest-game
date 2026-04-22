@@ -109,6 +109,47 @@ export const DietaryPreferencesForm = ({
         />
       </div>
 
+      {/* Favorite dishes (multi-select, max 5) */}
+      <div className="grid gap-2">
+        <Label className="font-serif text-xs uppercase tracking-widest">
+          {t("prefs.q5")}
+        </Label>
+        <p className="font-body text-xs text-muted-foreground">
+          {t("prefs.q5Hint")} · {value.favoriteDishes.length}/{MAX_FAVORITE_DISHES}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {FAVORITE_DISHES.map((d) => {
+            const selected = value.favoriteDishes.includes(d);
+            const atLimit =
+              !selected && value.favoriteDishes.length >= MAX_FAVORITE_DISHES;
+            const toggle = () => {
+              const next: FavoriteDish[] = selected
+                ? value.favoriteDishes.filter((x) => x !== d)
+                : [...value.favoriteDishes, d];
+              onChange({ ...value, favoriteDishes: next });
+            };
+            return (
+              <button
+                key={d}
+                type="button"
+                onClick={toggle}
+                disabled={atLimit}
+                aria-pressed={selected}
+                className={`rounded-md border-2 px-3 py-2 font-serif text-sm tracking-wide transition-colors ${
+                  selected
+                    ? "border-moss bg-moss text-moss-foreground"
+                    : atLimit
+                    ? "border-border bg-paper-deep/20 text-muted-foreground opacity-60"
+                    : "border-border bg-paper-deep/40 text-ink hover:bg-paper-deep/70"
+                }`}
+              >
+                {t(`prefs.dish.${d}` as never)}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="flex items-center justify-end gap-2">
         {onSkip && (
           <Button type="button" variant="outline" onClick={onSkip}>
