@@ -4,11 +4,37 @@ import { useSyncExternalStore } from "react";
 export type DietType = "omnivore" | "vegetarian" | "vegan" | "pescatarian" | "other";
 export type SpiceLevel = "none" | "mild" | "medium" | "hot";
 
+export type FavoriteDish =
+  | "pizza"
+  | "pasta"
+  | "sushi"
+  | "burger"
+  | "salad"
+  | "tacos"
+  | "ramen"
+  | "curry"
+  | "steak"
+  | "risotto"
+  | "dumplings"
+  | "sandwich"
+  | "soup"
+  | "bbq"
+  | "seafood"
+  | "dessert";
+
+export const FAVORITE_DISHES: FavoriteDish[] = [
+  "pizza", "pasta", "sushi", "burger", "salad", "tacos", "ramen", "curry",
+  "steak", "risotto", "dumplings", "sandwich", "soup", "bbq", "seafood", "dessert",
+];
+
+export const MAX_FAVORITE_DISHES = 5;
+
 export interface DietaryPreferences {
   diet: DietType;
   allergies: string; // free text, comma-separated
   spice: SpiceLevel;
   dislikes: string; // free text
+  favoriteDishes: FavoriteDish[];
 }
 
 export const defaultPreferences: DietaryPreferences = {
@@ -16,6 +42,7 @@ export const defaultPreferences: DietaryPreferences = {
   allergies: "",
   spice: "medium",
   dislikes: "",
+  favoriteDishes: [],
 };
 
 const STORAGE_KEY = "ttq.preferences.v1";
