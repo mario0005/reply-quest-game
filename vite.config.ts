@@ -5,6 +5,12 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+
+  // AGGIUNGI QUESTA RIGA: 
+  // Usa '/' se il repository si chiama "tuonome.github.io"
+  // Usa '/nome-repository/' se è un progetto secondario
+  base: "/mario0005.github.io/", 
+  
   server: {
     host: "::",
     port: 8080,
