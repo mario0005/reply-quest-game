@@ -207,7 +207,11 @@ const Index = () => {
 
         <footer className="mt-10 text-center font-body text-xs text-muted-foreground">
           <p>{t("footer.tag")}</p>
-          <div className="mt-2 flex items-center justify-center gap-3">
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+            <Link to="/rules" className="text-primary underline underline-offset-4 hover:text-primary/80">
+              {t("footer.rules")}
+            </Link>
+            <span>·</span>
             <Link to="/privacy" className="text-primary underline underline-offset-4 hover:text-primary/80">
               {t("footer.privacy")}
             </Link>
