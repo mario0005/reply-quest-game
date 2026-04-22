@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => ({
   // AGGIUNGI QUESTA RIGA: 
   // Usa '/' se il repository si chiama "tuonome.github.io"
   // Usa '/nome-repository/' se è un progetto secondario
-  base: "mario0005/reply-quest-game", 
+  base: "mario0005/reply-quest-game/", 
   
   server: {
     host: "::",
