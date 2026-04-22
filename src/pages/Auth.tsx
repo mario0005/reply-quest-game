@@ -53,7 +53,7 @@ const Auth = () => {
         ? `${t("auth.welcome")}, ${res.user.name}!`
         : `${t("auth.welcomeBack")}, ${res.user.name}!`,
     );
-    navigate("/");
+    navigate(mode === "signup" ? "/onboarding" : "/");
   };
 
   return (
