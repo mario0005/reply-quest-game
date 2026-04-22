@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { Stamp } from "@/components/Stamp";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { DietaryPreferencesForm } from "@/components/DietaryPreferencesForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +11,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessions, useResponses } from "@/hooks/useResponsesStore";
 import { responsesStore } from "@/data/responsesStore";
+import {
+  defaultPreferences,
+  preferencesStore,
+  usePreferences,
+} from "@/data/preferencesStore";
 import { toast } from "sonner";
 
 const profileSchema = z.object({
@@ -27,6 +33,9 @@ const Account = () => {
   const [email, setEmail] = useState(user?.email ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const savedPrefs = usePreferences(user?.id);
+  const [prefs, setPrefs] = useState(savedPrefs ?? defaultPreferences);
 
   const mySessions = useMemo(
     () =>
@@ -75,13 +84,21 @@ const Account = () => {
 
   const handleDelete = () => {
     if (!confirm(t("acc.deleteConfirm"))) return;
+    const userId = user.id;
     const res = deleteCurrentAccount();
     if ("error" in res) {
       toast.error(res.error);
       return;
     }
+    preferencesStore.remove(userId);
     toast.success(t("acc.deleted"));
     navigate("/auth");
+  };
+
+  const savePrefs = (e: React.FormEvent) => {
+    e.preventDefault();
+    preferencesStore.set(user.id, prefs);
+    toast.success(t("prefs.saved"));
   };
 
   return (
@@ -179,6 +196,19 @@ const Account = () => {
               </Button>
             </div>
           </form>
+        </section>
+
+        {/* Dietary preferences */}
+        <section className="paper-card mb-6 p-6">
+          <h2 className="font-serif text-xl font-bold">{t("prefs.editTitle")}</h2>
+          <p className="mt-1 font-body text-sm text-muted-foreground">{t("prefs.editHint")}</p>
+          <div className="ink-rule my-4" />
+          <DietaryPreferencesForm
+            value={prefs}
+            onChange={setPrefs}
+            onSubmit={savePrefs}
+            submitLabel={t("common.save")}
+          />
         </section>
 
         {/* Stats */}
