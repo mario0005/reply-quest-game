@@ -177,6 +177,7 @@ const Admin = () => {
 };
 
 const Editor = ({ question, onDone }: { question: Question; onDone: () => void }) => {
+  const { t } = useTranslation();
   const [prompt, setPrompt] = useState(question.prompt);
   const [points, setPoints] = useState(question.points);
   const [options, setOptions] = useState(
@@ -191,10 +192,20 @@ const Editor = ({ question, onDone }: { question: Question; onDone: () => void }
   const [accepted, setAccepted] = useState(
     question.type === "text" ? question.acceptedAnswers.join("\n") : "",
   );
+  const [fbCorrect, setFbCorrect] = useState(question.feedback?.correct ?? "");
+  const [fbWrong, setFbWrong] = useState(question.feedback?.wrong ?? "");
 
   const save = () => {
     if (!prompt.trim()) return toast.error("Prompt is required");
-    const patch: Partial<Question> = { prompt: prompt.trim(), points: Number(points) || 0 } as Partial<Question>;
+    const fb = {
+      correct: fbCorrect.trim() || undefined,
+      wrong: fbWrong.trim() || undefined,
+    };
+    const patch: Partial<Question> = {
+      prompt: prompt.trim(),
+      points: Number(points) || 0,
+      feedback: fb.correct || fb.wrong ? fb : undefined,
+    } as Partial<Question>;
     if (question.type === "multiple_choice") {
       const opts = options.split("\n").map((o) => o.trim()).filter(Boolean);
       if (opts.length < 2) return toast.error("Need at least 2 options");
@@ -266,6 +277,26 @@ const Editor = ({ question, onDone }: { question: Question; onDone: () => void }
           <Textarea value={accepted} onChange={(e) => setAccepted(e.target.value)} rows={3} className="border-2 bg-background font-body" />
         </div>
       )}
+
+      <div className="grid gap-3 rounded-md border-2 border-dashed bg-background/60 p-3">
+        <div className="grid gap-1.5">
+          <Label className="font-serif text-xs uppercase tracking-widest">{t("admin.qFbCorrect")}</Label>
+          <Input
+            value={fbCorrect}
+            onChange={(e) => setFbCorrect(e.target.value)}
+            className="h-10 border-2 bg-background"
+          />
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="font-serif text-xs uppercase tracking-widest">{t("admin.qFbWrong")}</Label>
+          <Input
+            value={fbWrong}
+            onChange={(e) => setFbWrong(e.target.value)}
+            className="h-10 border-2 bg-background"
+          />
+        </div>
+        <p className="font-body text-xs text-muted-foreground">{t("admin.qFbHint")}</p>
+      </div>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onDone}>Cancel</Button>
