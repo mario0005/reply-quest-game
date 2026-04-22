@@ -139,6 +139,9 @@ export const translations = {
     "admin.fbResetDone": "Feedback messages reset",
     "admin.fbLangEN": "English",
     "admin.fbLangIT": "Italian",
+    "admin.qFbCorrect": "Custom correct-answer message (optional)",
+    "admin.qFbWrong": "Custom wrong-answer message (optional)",
+    "admin.qFbHint": "Leave empty to use the default messages above.",
 
     // Responses
     "resp.stamp": "Ledger",
@@ -290,6 +293,9 @@ export const translations = {
     "admin.fbResetDone": "Messaggi ripristinati",
     "admin.fbLangEN": "Inglese",
     "admin.fbLangIT": "Italiano",
+    "admin.qFbCorrect": "Messaggio personalizzato risposta corretta (opzionale)",
+    "admin.qFbWrong": "Messaggio personalizzato risposta sbagliata (opzionale)",
+    "admin.qFbHint": "Lascia vuoto per usare i messaggi predefiniti sopra.",
 
     // Responses
     "resp.stamp": "Registro",

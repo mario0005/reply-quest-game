@@ -1,3 +1,10 @@
+// Optional per-question feedback overrides. When empty, the global
+// feedback messages from feedbackStore are used instead.
+export interface QuestionFeedback {
+  correct?: string;
+  wrong?: string;
+}
+
 export type Question =
   | {
       id: string;
@@ -6,6 +13,7 @@ export type Question =
       options: string[];
       correctIndex: number;
       points: number;
+      feedback?: QuestionFeedback;
     }
   | {
       id: string;
@@ -13,6 +21,7 @@ export type Question =
       prompt: string;
       correct: boolean;
       points: number;
+      feedback?: QuestionFeedback;
     }
   | {
       id: string;
@@ -20,6 +29,7 @@ export type Question =
       prompt: string;
       acceptedAnswers: string[]; // lowercased
       points: number;
+      feedback?: QuestionFeedback;
     };
 
 export const mockQuestions: Question[] = [
