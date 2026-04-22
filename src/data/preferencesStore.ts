@@ -49,11 +49,19 @@ const STORAGE_KEY = "ttq.preferences.v1";
 
 type Store = Record<string, DietaryPreferences>;
 
+function normalize(p: Partial<DietaryPreferences> | null | undefined): DietaryPreferences {
+  return { ...defaultPreferences, ...(p ?? {}), favoriteDishes: p?.favoriteDishes ?? [] };
+}
+
 function load(): Store {
   if (typeof window === "undefined") return {};
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Store) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Record<string, Partial<DietaryPreferences>>;
+    const out: Store = {};
+    for (const [k, v] of Object.entries(parsed)) out[k] = normalize(v);
+    return out;
   } catch {
     return {};
   }
