@@ -1,3 +1,12 @@
+import { Link } from "react-router-dom";
+import { Stamp } from "@/components/Stamp";
+import { useTranslation } from "@/hooks/useTranslation";
+
+export default function Cookies() {
+  const { t } = useTranslation();
+
+  return (
+
 <main className="min-h-screen px-4 py-10">
   <div className="mx-auto w-full max-w-2xl">
     {/* Header */}
@@ -68,3 +77,5 @@
     </footer>
   </div>
 </main>
+    );
+}
