@@ -84,13 +84,21 @@ const Account = () => {
 
   const handleDelete = () => {
     if (!confirm(t("acc.deleteConfirm"))) return;
+    const userId = user.id;
     const res = deleteCurrentAccount();
     if ("error" in res) {
       toast.error(res.error);
       return;
     }
+    preferencesStore.remove(userId);
     toast.success(t("acc.deleted"));
     navigate("/auth");
+  };
+
+  const savePrefs = (e: React.FormEvent) => {
+    e.preventDefault();
+    preferencesStore.set(user.id, prefs);
+    toast.success(t("prefs.saved"));
   };
 
   return (
