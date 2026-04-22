@@ -99,6 +99,12 @@ const Index = () => {
             >
               {t("nav.account")}
             </Link>
+            <Link
+              to="/rules"
+              className="text-primary underline underline-offset-4 hover:text-primary/80"
+            >
+              {t("footer.rules")}
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             <LanguageToggle />
