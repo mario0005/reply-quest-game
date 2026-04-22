@@ -43,7 +43,7 @@ export default function Privacy() {
           <div>
             <h2 className="font-serif text-xl font-bold mb-3">2. Tipologia di dati raccolti e Finalità</h2>
             <p className="font-body text-sm text-muted-foreground leading-relaxed mb-3">
-              Il sito raccoglie esclusivamente le preferenze alimentari fornite volontariamente dall'utente tramite il questionario presente sulla pagina.
+              Il sito raccoglie esclusivamente le risposte fornite volontariamente dall'utente.
             </p>
             <ul className="font-body text-sm text-muted-foreground leading-relaxed space-y-2">
               <li>
