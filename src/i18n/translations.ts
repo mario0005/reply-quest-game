@@ -79,6 +79,7 @@ export const translations = {
     "footer.tag": "Tactile Tabletop · in-memory store",
     "footer.privacy": "Privacy",
     "footer.cookies": "Cookies",
+    "footer.rules": "Rules",
 
     // Leaderboard
     "lb.stamp": "Rankings",
@@ -199,6 +200,30 @@ export const translations = {
     "prefs.dish.bbq": "BBQ",
     "prefs.dish.seafood": "Seafood",
     "prefs.dish.dessert": "Dessert",
+
+    // Rules
+    "rules.stamp": "House Rules",
+    "rules.title": "How to Play",
+    "rules.subtitle": "A short guide to the deck, the scoring, and the spirit of the game.",
+    "rules.howH": "The idea",
+    "rules.howP": "The Parlour Quiz is a pocket-sized game of wits. Each round you'll be dealt a small deck of cards, one question at a time. Answer as best you can — there are no time limits, just you and the card.",
+    "rules.typesH": "Question types",
+    "rules.typeMC": "Multiple choice — pick the option you believe is correct.",
+    "rules.typeTF": "True or False — decide whether the statement holds.",
+    "rules.typeText": "Open text — type your answer; accepted spellings are listed by the author.",
+    "rules.scoringH": "Scoring",
+    "rules.scoring1": "Each card carries its own point value, shown on the card.",
+    "rules.scoring2": "A correct answer awards the full points; a wrong answer awards none.",
+    "rules.scoring3": "Your final score is the sum of all points earned across the round.",
+    "rules.flowH": "Round flow",
+    "rules.flow1": "Sign in (or create an account) and answer the dietary preferences once.",
+    "rules.flow2": "From the lobby, deal the first card to begin the round.",
+    "rules.flow3": "Answer each card and move to the next — your score updates as you go.",
+    "rules.flow4": "At the end you'll see your total. Your best scores appear in the leaderboard.",
+    "rules.tipsH": "Good to know",
+    "rules.tip1": "Take your time — there is no clock running.",
+    "rules.tip2": "You can change your dietary preferences any time from your account.",
+    "rules.tip3": "Switch language at any moment using the toggle in the header.",
   },
   it: {
     // Brand
@@ -276,6 +301,7 @@ export const translations = {
     "footer.tag": "Tactile Tabletop · archivio in memoria",
     "footer.privacy": "Privacy",
     "footer.cookies": "Cookies",
+    "footer.rules": "Regole",
 
     // Leaderboard
     "lb.stamp": "Classifica",
@@ -396,6 +422,30 @@ export const translations = {
     "prefs.dish.bbq": "Grigliata",
     "prefs.dish.seafood": "Pesce",
     "prefs.dish.dessert": "Dolce",
+
+    // Rules
+    "rules.stamp": "Regole della casa",
+    "rules.title": "Come si gioca",
+    "rules.subtitle": "Una breve guida al mazzo, al punteggio e allo spirito del gioco.",
+    "rules.howH": "L'idea",
+    "rules.howP": "Il Quiz da Salotto è un gioco di ingegno tascabile. In ogni partita ti viene servito un piccolo mazzo di carte, una domanda alla volta. Rispondi come meglio puoi — non ci sono limiti di tempo, solo tu e la carta.",
+    "rules.typesH": "Tipi di domanda",
+    "rules.typeMC": "Scelta multipla — scegli l'opzione che ritieni corretta.",
+    "rules.typeTF": "Vero o Falso — decidi se l'affermazione è giusta.",
+    "rules.typeText": "Risposta aperta — scrivi la tua risposta; le grafie accettate sono indicate dall'autore.",
+    "rules.scoringH": "Punteggio",
+    "rules.scoring1": "Ogni carta ha il suo valore in punti, mostrato sulla carta.",
+    "rules.scoring2": "Una risposta corretta assegna tutti i punti; una sbagliata, nessuno.",
+    "rules.scoring3": "Il punteggio finale è la somma di tutti i punti ottenuti nella partita.",
+    "rules.flowH": "Svolgimento della partita",
+    "rules.flow1": "Accedi (o crea un account) e rispondi una volta alle preferenze alimentari.",
+    "rules.flow2": "Dalla lobby, dai la prima carta per iniziare la partita.",
+    "rules.flow3": "Rispondi ad ogni carta e passa alla successiva — il punteggio si aggiorna man mano.",
+    "rules.flow4": "Alla fine vedrai il totale. I migliori punteggi compaiono nella classifica.",
+    "rules.tipsH": "Buono a sapersi",
+    "rules.tip1": "Prenditi il tuo tempo — non c'è alcun cronometro.",
+    "rules.tip2": "Puoi modificare le preferenze alimentari in qualsiasi momento dal tuo account.",
+    "rules.tip3": "Cambia lingua quando vuoi usando l'interruttore nell'header.",
   },
 } as const;
 
