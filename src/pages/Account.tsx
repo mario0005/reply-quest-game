@@ -198,6 +198,19 @@ const Account = () => {
           </form>
         </section>
 
+        {/* Dietary preferences */}
+        <section className="paper-card mb-6 p-6">
+          <h2 className="font-serif text-xl font-bold">{t("prefs.editTitle")}</h2>
+          <p className="mt-1 font-body text-sm text-muted-foreground">{t("prefs.editHint")}</p>
+          <div className="ink-rule my-4" />
+          <DietaryPreferencesForm
+            value={prefs}
+            onChange={setPrefs}
+            onSubmit={savePrefs}
+            submitLabel={t("common.save")}
+          />
+        </section>
+
         {/* Stats */}
         <section className="paper-card mb-6 p-6">
           <h2 className="font-serif text-xl font-bold">{t("acc.stats")}</h2>
