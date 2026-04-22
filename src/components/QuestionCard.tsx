@@ -161,7 +161,9 @@ export const QuestionCard = ({ question, index, total, onAnswer }: Props) => {
             {wasCorrect ? `+${question.points}` : feedback.noPoints}
           </span>
           <span className="font-body text-sm text-muted-foreground">
-            {wasCorrect ? feedback.wellPlayed : feedback.betterLuck}
+            {wasCorrect
+              ? (question.feedback?.correct?.trim() || feedback.wellPlayed)
+              : (question.feedback?.wrong?.trim() || feedback.betterLuck)}
           </span>
         </div>
       )}
