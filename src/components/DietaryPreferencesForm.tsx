@@ -4,6 +4,9 @@ import { Label } from "@/components/ui/label";
 import {
   DietaryPreferences,
   DietType,
+  FavoriteDish,
+  FAVORITE_DISHES,
+  MAX_FAVORITE_DISHES,
   SpiceLevel,
 } from "@/data/preferencesStore";
 import { useTranslation } from "@/hooks/useTranslation";
