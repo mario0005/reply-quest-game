@@ -145,6 +145,11 @@ export function exportData(
       XLSX.utils.json_to_sheet(responsesAsRows(responses)),
       "Responses",
     );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(preferencesAsRows()),
+      "Dietary Preferences",
+    );
     const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     triggerDownload(
       new Blob([out], {
@@ -165,6 +170,9 @@ export function exportData(
   parts.push("");
   parts.push("=== RESPONSES ===");
   parts.push(toCSV(responsesAsRows(responses)));
+  parts.push("");
+  parts.push("=== DIETARY PREFERENCES ===");
+  parts.push(toCSV(preferencesAsRows()));
   const csv = parts.join("\n");
   triggerDownload(
     new Blob([csv], { type: "text/csv;charset=utf-8" }),
