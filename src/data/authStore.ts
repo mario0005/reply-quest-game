@@ -199,6 +199,10 @@ export const authStore = {
     return session;
   },
 
+  listAccounts(): Account[] {
+    return accounts;
+  },
+
   subscribe(l: Listener) {
     listeners.add(l);
     return () => listeners.delete(l);

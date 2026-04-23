@@ -1,5 +1,7 @@
 import * as XLSX from "xlsx";
 import type { StoredResponse, StoredSession } from "@/data/responsesStore";
+import { authStore } from "@/data/authStore";
+import { preferencesStore } from "@/data/preferencesStore";
 
 export type ExportFormat = "csv" | "xlsx";
 
