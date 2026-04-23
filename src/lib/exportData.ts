@@ -1,5 +1,7 @@
 import * as XLSX from "xlsx";
 import type { StoredResponse, StoredSession } from "@/data/responsesStore";
+import { authStore } from "@/data/authStore";
+import { preferencesStore } from "@/data/preferencesStore";
 
 export type ExportFormat = "csv" | "xlsx";
 
@@ -94,6 +96,25 @@ function leaderboardAsRows(sessions: StoredSession[]) {
   }));
 }
 
+function preferencesAsRows() {
+  const accounts = authStore.listAccounts();
+  const snap = preferencesStore.snapshot();
+  return accounts.map((a) => {
+    const p = snap[a.id];
+    return {
+      "First Name": a.name,
+      Surname: a.surname,
+      Email: a.email ?? "",
+      "Created At": a.createdAt,
+      Diet: p?.diet ?? "",
+      "Spice Level": p?.spice ?? "",
+      Allergies: p?.allergies ?? "",
+      Dislikes: p?.dislikes ?? "",
+      "Favorite Dishes": p?.favoriteDishes?.join(", ") ?? "",
+    };
+  });
+}
+
 function toCSV(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -124,6 +145,11 @@ export function exportData(
       XLSX.utils.json_to_sheet(responsesAsRows(responses)),
       "Responses",
     );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet(preferencesAsRows()),
+      "Dietary Preferences",
+    );
     const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     triggerDownload(
       new Blob([out], {
@@ -144,6 +170,9 @@ export function exportData(
   parts.push("");
   parts.push("=== RESPONSES ===");
   parts.push(toCSV(responsesAsRows(responses)));
+  parts.push("");
+  parts.push("=== DIETARY PREFERENCES ===");
+  parts.push(toCSV(preferencesAsRows()));
   const csv = parts.join("\n");
   triggerDownload(
     new Blob([csv], { type: "text/csv;charset=utf-8" }),
