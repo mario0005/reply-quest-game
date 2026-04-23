@@ -96,6 +96,25 @@ function leaderboardAsRows(sessions: StoredSession[]) {
   }));
 }
 
+function preferencesAsRows() {
+  const accounts = authStore.listAccounts();
+  const snap = preferencesStore.snapshot();
+  return accounts.map((a) => {
+    const p = snap[a.id];
+    return {
+      "First Name": a.name,
+      Surname: a.surname,
+      Email: a.email ?? "",
+      "Created At": a.createdAt,
+      Diet: p?.diet ?? "",
+      "Spice Level": p?.spice ?? "",
+      Allergies: p?.allergies ?? "",
+      Dislikes: p?.dislikes ?? "",
+      "Favorite Dishes": p?.favoriteDishes?.join(", ") ?? "",
+    };
+  });
+}
+
 function toCSV(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
   const ws = XLSX.utils.json_to_sheet(rows);
