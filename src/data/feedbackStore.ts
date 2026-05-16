@@ -1,6 +1,6 @@
-// Editable bilingual feedback messages shown after answering a question.
-// Persisted to localStorage so admins can customize them.
+// Bilingual feedback messages, backed by Supabase. Sync cache for consumers.
 
+import { supabase } from "@/integrations/supabase/client";
 import type { Lang } from "@/i18n/translations";
 
 export interface FeedbackMessages {
@@ -11,53 +11,42 @@ export interface FeedbackMessages {
 
 export type FeedbackData = Record<Lang, FeedbackMessages>;
 
-const KEY = "ttq.feedback.v1";
-
 const defaults: FeedbackData = {
-  en: {
-    wellPlayed: "Well played.",
-    betterLuck: "Better luck on the next card.",
-    noPoints: "No points",
-  },
-  it: {
-    wellPlayed: "Ben giocato.",
-    betterLuck: "Sarà meglio alla prossima carta.",
-    noPoints: "Nessun punto",
-  },
+  en: { wellPlayed: "Well played.", betterLuck: "Better luck on the next card.", noPoints: "No points" },
+  it: { wellPlayed: "Ben giocato.", betterLuck: "Sarà meglio alla prossima carta.", noPoints: "Nessun punto" },
 };
 
-let data: FeedbackData = load();
+let data: FeedbackData = { en: { ...defaults.en }, it: { ...defaults.it } };
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
+const emit = () => listeners.forEach((l) => l());
 
-function load(): FeedbackData {
-  if (typeof window === "undefined") return { ...defaults };
-  try {
-    const raw = window.localStorage.getItem(KEY);
-    if (!raw) return { en: { ...defaults.en }, it: { ...defaults.it } };
-    const parsed = JSON.parse(raw) as Partial<FeedbackData>;
-    return {
-      en: { ...defaults.en, ...(parsed.en ?? {}) },
-      it: { ...defaults.it, ...(parsed.it ?? {}) },
-    };
-  } catch {
-    return { en: { ...defaults.en }, it: { ...defaults.it } };
+async function load() {
+  const { data: rows, error } = await supabase.from("feedback_messages").select("*");
+  if (error) {
+    console.warn("loadFeedback", error);
+    return;
   }
-}
-
-function persist() {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(KEY, JSON.stringify(data));
-  } catch {
-    // ignore
+  const next: FeedbackData = { en: { ...defaults.en }, it: { ...defaults.it } };
+  for (const r of rows ?? []) {
+    const lang = r.lang as Lang;
+    if (lang === "en" || lang === "it") {
+      next[lang] = {
+        wellPlayed: r.well_played ?? defaults[lang].wellPlayed,
+        betterLuck: r.better_luck ?? defaults[lang].betterLuck,
+        noPoints: r.no_points ?? defaults[lang].noPoints,
+      };
+    }
   }
+  data = next;
+  emit();
 }
 
-function emit() {
-  listeners.forEach((l) => l());
-}
+supabase.auth.onAuthStateChange(() => {
+  setTimeout(load, 0);
+});
+load();
 
 export const feedbackStore = {
   get(): FeedbackData {
@@ -66,15 +55,29 @@ export const feedbackStore = {
   getFor(lang: Lang): FeedbackMessages {
     return data[lang];
   },
-  update(lang: Lang, patch: Partial<FeedbackMessages>) {
+  async update(lang: Lang, patch: Partial<FeedbackMessages>) {
     data = { ...data, [lang]: { ...data[lang], ...patch } };
-    persist();
     emit();
+    const merged = data[lang];
+    const { error } = await supabase.from("feedback_messages").upsert({
+      lang,
+      well_played: merged.wellPlayed,
+      better_luck: merged.betterLuck,
+      no_points: merged.noPoints,
+    });
+    if (error) console.error("updateFeedback", error);
   },
-  resetToDefaults() {
-    data = { en: { ...defaults.en }, it: { ...defaults.it } };
-    persist();
-    emit();
+  async resetToDefaults() {
+    for (const lang of ["en", "it"] as Lang[]) {
+      const m = defaults[lang];
+      await supabase.from("feedback_messages").upsert({
+        lang,
+        well_played: m.wellPlayed,
+        better_luck: m.betterLuck,
+        no_points: m.noPoints,
+      });
+    }
+    await load();
   },
   subscribe(l: Listener) {
     listeners.add(l);

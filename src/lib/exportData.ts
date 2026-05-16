@@ -1,7 +1,6 @@
 import * as XLSX from "xlsx";
 import type { StoredResponse, StoredSession } from "@/data/responsesStore";
-import { authStore } from "@/data/authStore";
-import { preferencesStore } from "@/data/preferencesStore";
+import { supabase } from "@/integrations/supabase/client";
 
 export type ExportFormat = "csv" | "xlsx";
 
@@ -39,13 +38,8 @@ function buildLeaderboard(sessions: StoredSession[]): LeaderboardRow[] {
     const existing = byPlayer.get(key);
     if (!existing) {
       byPlayer.set(key, {
-        rank: 0,
-        playerName: s.playerName,
-        playerSurname: s.playerSurname,
-        bestScore: s.score,
-        bestCorrect: s.correctCount,
-        bestTotal: s.total,
-        rounds: 1,
+        rank: 0, playerName: s.playerName, playerSurname: s.playerSurname,
+        bestScore: s.score, bestCorrect: s.correctCount, bestTotal: s.total, rounds: 1,
       });
     } else {
       existing.rounds += 1;
@@ -61,56 +55,54 @@ function buildLeaderboard(sessions: StoredSession[]): LeaderboardRow[] {
   return rows;
 }
 
-function responsesAsRows(responses: StoredResponse[]) {
-  return responses.map((r) => ({
-    "Answered At": r.answeredAt,
-    "First Name": r.playerName,
-    Surname: r.playerSurname,
-    Question: r.questionPrompt,
-    Answer: r.answer,
-    Correct: r.correct ? "Yes" : "No",
-    "Points Earned": r.pointsEarned,
-  }));
-}
+const responsesAsRows = (responses: StoredResponse[]) => responses.map((r) => ({
+  "Answered At": r.answeredAt,
+  "First Name": r.playerName,
+  Surname: r.playerSurname,
+  Question: r.questionPrompt,
+  Answer: r.answer,
+  Correct: r.correct ? "Yes" : "No",
+  "Points Earned": r.pointsEarned,
+}));
 
-function sessionsAsRows(sessions: StoredSession[]) {
-  return sessions.map((s) => ({
-    "Finished At": s.finishedAt,
-    "First Name": s.playerName,
-    Surname: s.playerSurname,
-    Score: s.score,
-    "Correct Answers": s.correctCount,
-    "Total Questions": s.total,
-  }));
-}
+const sessionsAsRows = (sessions: StoredSession[]) => sessions.map((s) => ({
+  "Finished At": s.finishedAt,
+  "First Name": s.playerName,
+  Surname: s.playerSurname,
+  Score: s.score,
+  "Correct Answers": s.correctCount,
+  "Total Questions": s.total,
+}));
 
-function leaderboardAsRows(sessions: StoredSession[]) {
-  return buildLeaderboard(sessions).map((r) => ({
-    Rank: r.rank,
-    "First Name": r.playerName,
-    Surname: r.playerSurname,
-    "Best Score": r.bestScore,
-    "Best Correct": r.bestCorrect,
-    "Out Of": r.bestTotal,
-    "Rounds Played": r.rounds,
-  }));
-}
+const leaderboardAsRows = (sessions: StoredSession[]) => buildLeaderboard(sessions).map((r) => ({
+  Rank: r.rank,
+  "First Name": r.playerName,
+  Surname: r.playerSurname,
+  "Best Score": r.bestScore,
+  "Best Correct": r.bestCorrect,
+  "Out Of": r.bestTotal,
+  "Rounds Played": r.rounds,
+}));
 
-function preferencesAsRows() {
-  const accounts = authStore.listAccounts();
-  const snap = preferencesStore.snapshot();
-  return accounts.map((a) => {
-    const p = snap[a.id];
+async function preferencesAsRows() {
+  const [{ data: profiles }, { data: prefs }] = await Promise.all([
+    supabase.from("profiles").select("id, name, surname, email, created_at"),
+    supabase.from("dietary_preferences").select("*"),
+  ]);
+  const prefsById = new Map<string, Record<string, unknown>>();
+  for (const p of prefs ?? []) prefsById.set(p.user_id as string, p as unknown as Record<string, unknown>);
+  return (profiles ?? []).map((a) => {
+    const p = prefsById.get(a.id as string);
     return {
-      "First Name": a.name,
-      Surname: a.surname,
+      "First Name": a.name ?? "",
+      Surname: a.surname ?? "",
       Email: a.email ?? "",
-      "Created At": a.createdAt,
-      Diet: p?.diet ?? "",
-      "Spice Level": p?.spice ?? "",
-      Allergies: p?.allergies ?? "",
-      Dislikes: p?.dislikes ?? "",
-      "Favorite Dishes": p?.favoriteDishes?.join(", ") ?? "",
+      "Created At": a.created_at ?? "",
+      Diet: (p?.diet as string) ?? "",
+      "Spice Level": (p?.spice as string) ?? "",
+      Allergies: (p?.allergies as string) ?? "",
+      Dislikes: (p?.dislikes as string) ?? "",
+      "Favorite Dishes": Array.isArray(p?.favorite_dishes) ? (p!.favorite_dishes as string[]).join(", ") : "",
     };
   });
 }
@@ -121,61 +113,35 @@ function toCSV(rows: Record<string, unknown>[]): string {
   return XLSX.utils.sheet_to_csv(ws);
 }
 
-export function exportData(
+export async function exportData(
   format: ExportFormat,
   responses: StoredResponse[],
   sessions: StoredSession[],
 ) {
   const ts = timestamp();
+  const prefsRows = await preferencesAsRows();
 
   if (format === "xlsx") {
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(leaderboardAsRows(sessions)),
-      "Leaderboard",
-    );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(sessionsAsRows(sessions)),
-      "Sessions",
-    );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(responsesAsRows(responses)),
-      "Responses",
-    );
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet(preferencesAsRows()),
-      "Dietary Preferences",
-    );
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(leaderboardAsRows(sessions)), "Leaderboard");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sessionsAsRows(sessions)), "Sessions");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(responsesAsRows(responses)), "Responses");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prefsRows), "Dietary Preferences");
     const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     triggerDownload(
-      new Blob([out], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      }),
+      new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
       `parlour-quiz-export-${ts}.xlsx`,
     );
     return;
   }
 
-  // CSV: produce a single combined CSV with section headers
   const parts: string[] = [];
-  parts.push("=== LEADERBOARD ===");
-  parts.push(toCSV(leaderboardAsRows(sessions)));
-  parts.push("");
-  parts.push("=== SESSIONS ===");
-  parts.push(toCSV(sessionsAsRows(sessions)));
-  parts.push("");
-  parts.push("=== RESPONSES ===");
-  parts.push(toCSV(responsesAsRows(responses)));
-  parts.push("");
-  parts.push("=== DIETARY PREFERENCES ===");
-  parts.push(toCSV(preferencesAsRows()));
-  const csv = parts.join("\n");
+  parts.push("=== LEADERBOARD ===", toCSV(leaderboardAsRows(sessions)), "");
+  parts.push("=== SESSIONS ===", toCSV(sessionsAsRows(sessions)), "");
+  parts.push("=== RESPONSES ===", toCSV(responsesAsRows(responses)), "");
+  parts.push("=== DIETARY PREFERENCES ===", toCSV(prefsRows));
   triggerDownload(
-    new Blob([csv], { type: "text/csv;charset=utf-8" }),
+    new Blob([parts.join("\n")], { type: "text/csv;charset=utf-8" }),
     `parlour-quiz-export-${ts}.csv`,
   );
 }

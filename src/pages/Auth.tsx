@@ -20,40 +20,56 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (user) return <Navigate to="/" replace />;
 
-  const baseSchema = z.object({
+  const signUpSchema = z.object({
     name: z.string().trim().min(1, t("auth.errNameRequired")).max(60),
     surname: z.string().trim().min(1, t("auth.errSurnameRequired")).max(60),
-    email: z.string().trim().max(255).email(t("auth.errEmailInvalid")).optional().or(z.literal("")),
-    password: z.string().max(100).optional().or(z.literal("")),
+    email: z.string().trim().max(255).email(t("auth.errEmailInvalid")),
+    password: z.string().min(6, "Password must be at least 6 characters").max(100),
+  });
+  const signInSchema = z.object({
+    email: z.string().trim().max(255).email(t("auth.errEmailInvalid")),
+    password: z.string().min(1, "Password is required").max(100),
   });
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const parsed = baseSchema.safeParse({ name, surname, email, password });
-    if (!parsed.success) return setError(parsed.error.issues[0].message);
-
-    const payload = {
-      name: parsed.data.name,
-      surname: parsed.data.surname,
-      email: parsed.data.email || undefined,
-      password: parsed.data.password || undefined,
-    };
-
-    const res = mode === "signup" ? signUp(payload) : signIn(payload);
-    if ("error" in res) {
-      setError(res.error);
-      return;
+    setBusy(true);
+    try {
+      if (mode === "signup") {
+        const parsed = signUpSchema.safeParse({ name, surname, email, password });
+        if (!parsed.success) {
+          setError(parsed.error.issues[0].message);
+          return;
+        }
+        const res = await signUp(parsed.data);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        toast.success(`${t("auth.welcome")}, ${res.user.name || res.user.email}!`);
+        navigate("/onboarding");
+      } else {
+        const parsed = signInSchema.safeParse({ email, password });
+        if (!parsed.success) {
+          setError(parsed.error.issues[0].message);
+          return;
+        }
+        const res = await signIn(parsed.data);
+        if (!res.ok) {
+          setError(res.error);
+          return;
+        }
+        toast.success(`${t("auth.welcomeBack")}, ${res.user.name || res.user.email}!`);
+        navigate("/");
+      }
+    } finally {
+      setBusy(false);
     }
-    toast.success(
-      mode === "signup"
-        ? `${t("auth.welcome")}, ${res.user.name}!`
-        : `${t("auth.welcomeBack")}, ${res.user.name}!`,
-    );
-    navigate(mode === "signup" ? "/onboarding" : "/");
   };
 
   return (
@@ -97,35 +113,34 @@ const Auth = () => {
           </div>
 
           <form onSubmit={submit} className="grid gap-4">
-            <div className="grid gap-1.5">
-              <Label htmlFor="name" className="font-serif text-xs uppercase tracking-widest">
-                {t("auth.firstName")}
-              </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ada"
-                className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="surname" className="font-serif text-xs uppercase tracking-widest">
-                {t("auth.surname")}
-              </Label>
-              <Input
-                id="surname"
-                value={surname}
-                onChange={(e) => setSurname(e.target.value)}
-                placeholder="Lovelace"
-                className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
-              />
-            </div>
-
-            <div className="ink-rule my-1" />
-            <p className="font-serif text-xs uppercase tracking-widest text-muted-foreground">
-              {t("common.optional")}
-            </p>
+            {mode === "signup" && (
+              <>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="name" className="font-serif text-xs uppercase tracking-widest">
+                    {t("auth.firstName")}
+                  </Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ada"
+                    className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
+                  />
+                </div>
+                <div className="grid gap-1.5">
+                  <Label htmlFor="surname" className="font-serif text-xs uppercase tracking-widest">
+                    {t("auth.surname")}
+                  </Label>
+                  <Input
+                    id="surname"
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                    placeholder="Lovelace"
+                    className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
+                  />
+                </div>
+              </>
+            )}
 
             <div className="grid gap-1.5">
               <Label htmlFor="email" className="font-serif text-xs uppercase tracking-widest">
@@ -138,6 +153,7 @@ const Auth = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("auth.emailPlaceholder")}
                 className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
+                required
               />
             </div>
             <div className="grid gap-1.5">
@@ -151,6 +167,7 @@ const Auth = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("auth.passwordPlaceholder")}
                 className="h-11 border-2 bg-paper-deep/40 font-body text-base shadow-inset"
+                required
               />
             </div>
 
@@ -160,14 +177,10 @@ const Auth = () => {
               </p>
             )}
 
-            <Button type="submit" size="lg" className="font-serif tracking-wider shadow-stamp">
-              {mode === "signin" ? t("auth.signIn") : t("auth.createAccount")}
+            <Button type="submit" size="lg" disabled={busy} className="font-serif tracking-wider shadow-stamp">
+              {busy ? "..." : mode === "signin" ? t("auth.signIn") : t("auth.createAccount")}
             </Button>
           </form>
-
-          <p className="mt-4 text-center font-body text-xs text-muted-foreground">
-            {t("auth.demoNote")}
-          </p>
         </section>
       </div>
     </main>

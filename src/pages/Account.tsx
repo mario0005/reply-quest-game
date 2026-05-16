@@ -62,7 +62,7 @@ const Account = () => {
   const bestScore = mySessions.reduce((max, s) => Math.max(max, s.score), 0);
   const totalCorrect = myResponses.filter((r) => r.correct).length;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     const parsed = profileSchema.safeParse({ email, password });
@@ -70,11 +70,11 @@ const Account = () => {
       setError(parsed.error.issues[0].message);
       return;
     }
-    const res = updateProfile({
+    const res = await updateProfile({
       email: parsed.data.email || undefined,
       password: parsed.data.password || undefined,
     });
-    if ("error" in res) {
+    if (!res.ok) {
       setError(res.error);
       return;
     }
@@ -82,15 +82,13 @@ const Account = () => {
     toast.success(t("acc.saved"));
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirm(t("acc.deleteConfirm"))) return;
-    const userId = user.id;
-    const res = deleteCurrentAccount();
-    if ("error" in res) {
+    const res = await deleteCurrentAccount();
+    if (!res.ok) {
       toast.error(res.error);
       return;
     }
-    preferencesStore.remove(userId);
     toast.success(t("acc.deleted"));
     navigate("/auth");
   };

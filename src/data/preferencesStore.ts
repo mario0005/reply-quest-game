@@ -1,26 +1,13 @@
-// Per-user dietary preferences, persisted to localStorage.
+// Per-user dietary preferences, backed by Supabase with a sync cache.
 import { useSyncExternalStore } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type DietType = "omnivore" | "vegetarian" | "vegan" | "pescatarian" | "other";
 export type SpiceLevel = "none" | "mild" | "medium" | "hot";
 
 export type FavoriteDish =
-  | "pizza"
-  | "pasta"
-  | "sushi"
-  | "burger"
-  | "salad"
-  | "tacos"
-  | "ramen"
-  | "curry"
-  | "steak"
-  | "risotto"
-  | "dumplings"
-  | "sandwich"
-  | "soup"
-  | "bbq"
-  | "seafood"
-  | "dessert";
+  | "pizza" | "pasta" | "sushi" | "burger" | "salad" | "tacos" | "ramen" | "curry"
+  | "steak" | "risotto" | "dumplings" | "sandwich" | "soup" | "bbq" | "seafood" | "dessert";
 
 export const FAVORITE_DISHES: FavoriteDish[] = [
   "pizza", "pasta", "sushi", "burger", "salad", "tacos", "ramen", "curry",
@@ -31,9 +18,9 @@ export const MAX_FAVORITE_DISHES = 5;
 
 export interface DietaryPreferences {
   diet: DietType;
-  allergies: string; // free text, comma-separated
+  allergies: string;
   spice: SpiceLevel;
-  dislikes: string; // free text
+  dislikes: string;
   favoriteDishes: FavoriteDish[];
 }
 
@@ -45,60 +32,98 @@ export const defaultPreferences: DietaryPreferences = {
   favoriteDishes: [],
 };
 
-const STORAGE_KEY = "ttq.preferences.v1";
-
 type Store = Record<string, DietaryPreferences>;
 
-function normalize(p: Partial<DietaryPreferences> | null | undefined): DietaryPreferences {
-  return { ...defaultPreferences, ...(p ?? {}), favoriteDishes: p?.favoriteDishes ?? [] };
-}
-
-function load(): Store {
-  if (typeof window === "undefined") return {};
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed = JSON.parse(raw) as Record<string, Partial<DietaryPreferences>>;
-    const out: Store = {};
-    for (const [k, v] of Object.entries(parsed)) out[k] = normalize(v);
-    return out;
-  } catch {
-    return {};
-  }
-}
-
-let store: Store = load();
+let store: Store = {};
 const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((l) => l());
 
-function persist() {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-  } catch {
-    // ignore
+function normalize(row: {
+  user_id: string;
+  diet: string;
+  allergies: string;
+  spice: string;
+  dislikes: string;
+  favorite_dishes: unknown;
+}): DietaryPreferences {
+  return {
+    diet: (row.diet as DietType) ?? "omnivore",
+    allergies: row.allergies ?? "",
+    spice: (row.spice as SpiceLevel) ?? "medium",
+    dislikes: row.dislikes ?? "",
+    favoriteDishes: Array.isArray(row.favorite_dishes)
+      ? (row.favorite_dishes as FavoriteDish[])
+      : [],
+  };
+}
+
+async function loadMine() {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) {
+    store = {};
+    emit();
+    return;
+  }
+  const { data, error } = await supabase
+    .from("dietary_preferences")
+    .select("*")
+    .eq("user_id", auth.user.id)
+    .maybeSingle();
+  if (error) {
+    console.warn("loadPrefs", error);
+    return;
+  }
+  if (data) {
+    store = { ...store, [auth.user.id]: normalize(data) };
+  } else {
+    const next = { ...store };
+    delete next[auth.user.id];
+    store = next;
+  }
+  emit();
+}
+
+async function loadAll() {
+  // Admin only (RLS); falls back to "just mine" otherwise.
+  const { data } = await supabase.from("dietary_preferences").select("*");
+  if (data) {
+    const next: Store = {};
+    for (const row of data) next[row.user_id] = normalize(row);
+    store = next;
+    emit();
+  } else {
+    await loadMine();
   }
 }
 
-function emit() {
-  listeners.forEach((l) => l());
-}
+supabase.auth.onAuthStateChange(() => {
+  setTimeout(loadAll, 0);
+});
+loadAll();
 
 export const preferencesStore = {
   get(userId: string): DietaryPreferences | null {
     return store[userId] ?? null;
   },
-  set(userId: string, prefs: DietaryPreferences) {
+  async set(userId: string, prefs: DietaryPreferences) {
     store = { ...store, [userId]: prefs };
-    persist();
     emit();
+    const { error } = await supabase.from("dietary_preferences").upsert({
+      user_id: userId,
+      diet: prefs.diet,
+      allergies: prefs.allergies,
+      spice: prefs.spice,
+      dislikes: prefs.dislikes,
+      favorite_dishes: prefs.favoriteDishes,
+    });
+    if (error) console.error("savePrefs", error);
   },
-  remove(userId: string) {
-    if (!(userId in store)) return;
+  async remove(userId: string) {
     const next = { ...store };
     delete next[userId];
     store = next;
-    persist();
     emit();
+    await supabase.from("dietary_preferences").delete().eq("user_id", userId);
   },
   subscribe(l: () => void) {
     listeners.add(l);
@@ -107,6 +132,7 @@ export const preferencesStore = {
   snapshot() {
     return store;
   },
+  reload: loadAll,
 };
 
 export function usePreferences(userId: string | undefined): DietaryPreferences | null {
