@@ -1,16 +1,8 @@
-// In-memory user accounts + session, persisted to localStorage.
-// NOTE: demo-only. Accounts are keyed by name+surname (case-insensitive).
-// Email and password are optional and not verified.
+// Supabase-backed auth store. Keeps the same external API as before so
+// existing components don't need to change. Session reflects the currently
+// signed-in Supabase user plus their profile row.
 
-export interface Account {
-  id: string;
-  key: string; // `${name}|${surname}` lowercased — unique
-  name: string;
-  surname: string;
-  email?: string;
-  password?: string;
-  createdAt: string;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 export interface SessionUser {
   id: string;
@@ -19,188 +11,141 @@ export interface SessionUser {
   email?: string;
 }
 
-const ACCOUNTS_KEY = "ttq.accounts.v1";
-const SESSION_KEY = "ttq.session.v1";
-
-let accounts: Account[] = load<Account[]>(ACCOUNTS_KEY, []);
-let session: SessionUser | null = load<SessionUser | null>(SESSION_KEY, null);
-
-// Seed the built-in admin account (name "admin" / surname "admin", password "admin").
-(function seedAdmin() {
-  const adminKey = "admin|admin";
-  if (!accounts.some((a) => a.key === adminKey)) {
-    accounts = [
-      {
-        id: "admin",
-        key: adminKey,
-        name: "admin",
-        surname: "admin",
-        password: "admin",
-        createdAt: new Date().toISOString(),
-      },
-      ...accounts,
-    ];
-    if (typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-      } catch {
-        // ignore
-      }
-    }
-  }
-})();
-
-export function isAdmin(user: SessionUser | null): boolean {
-  if (!user) return false;
-  return user.name.trim().toLowerCase() === "admin" && user.surname.trim().toLowerCase() === "admin";
-}
+let session: SessionUser | null = null;
+let adminFlag = false;
+let initialized = false;
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
-
-function load<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function persist() {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-    if (session) window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    else window.localStorage.removeItem(SESSION_KEY);
-  } catch {
-    // ignore
-  }
-}
 
 function emit() {
   listeners.forEach((l) => l());
 }
 
-function uid() {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+async function refreshFromSupabaseUser(userId: string | null, email: string | null) {
+  if (!userId) {
+    session = null;
+    adminFlag = false;
+    emit();
+    return;
+  }
+  // Fetch profile + role in parallel.
+  const [{ data: profile }, { data: roles }] = await Promise.all([
+    supabase.from("profiles").select("name, surname, email").eq("id", userId).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+  ]);
+  session = {
+    id: userId,
+    name: profile?.name ?? "",
+    surname: profile?.surname ?? "",
+    email: profile?.email ?? email ?? undefined,
+  };
+  adminFlag = !!roles?.some((r) => r.role === "admin");
+  emit();
 }
 
-function makeKey(name: string, surname: string) {
-  return `${name.trim().toLowerCase()}|${surname.trim().toLowerCase()}`;
+function init() {
+  if (initialized) return;
+  initialized = true;
+  supabase.auth.onAuthStateChange((_event, sess) => {
+    // Defer DB calls so we don't deadlock the auth callback.
+    setTimeout(() => {
+      refreshFromSupabaseUser(sess?.user?.id ?? null, sess?.user?.email ?? null);
+    }, 0);
+  });
+  supabase.auth.getSession().then(({ data }) => {
+    refreshFromSupabaseUser(data.session?.user?.id ?? null, data.session?.user?.email ?? null);
+  });
 }
+init();
 
-function toSession(acc: Account): SessionUser {
-  return { id: acc.id, name: acc.name, surname: acc.surname, email: acc.email };
+export function isAdmin(_user: SessionUser | null): boolean {
+  return adminFlag;
 }
 
 export const authStore = {
-  signUp(input: { name: string; surname: string; email?: string; password?: string }):
-    | { ok: true; user: SessionUser }
-    | { ok: false; error: string } {
-    const name = input.name.trim();
-    const surname = input.surname.trim();
-    if (!name || !surname) return { ok: false, error: "Name and surname are required." };
-    const key = makeKey(name, surname);
-    if (key === "admin|admin") {
-      return { ok: false, error: "That name is reserved. Please sign in instead." };
+  async signUp(input: { name: string; surname: string; email?: string; password?: string }) {
+    const email = (input.email ?? "").trim().toLowerCase();
+    const password = input.password ?? "";
+    if (!email || !password) {
+      return { ok: false as const, error: "Email and password are required to sign up." };
     }
-    if (accounts.some((a) => a.key === key)) {
-      return { ok: false, error: "An account with that name already exists. Try signing in." };
-    }
-    const acc: Account = {
-      id: uid(),
-      key,
-      name,
-      surname,
-      email: input.email?.trim() ? input.email.trim().toLowerCase() : undefined,
-      password: input.password?.trim() ? input.password : undefined,
-      createdAt: new Date().toISOString(),
+    const redirectTo = `${window.location.origin}/`;
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectTo,
+        data: { name: input.name.trim(), surname: input.surname.trim() },
+      },
+    });
+    if (error) return { ok: false as const, error: error.message };
+    if (!data.user) return { ok: false as const, error: "Sign-up failed. Please try again." };
+    const user: SessionUser = {
+      id: data.user.id,
+      name: input.name.trim(),
+      surname: input.surname.trim(),
+      email,
     };
-    accounts = [acc, ...accounts];
-    session = toSession(acc);
-    persist();
-    emit();
-    return { ok: true, user: session };
+    return { ok: true as const, user };
   },
 
-  signIn(input: { name: string; surname: string; password?: string }):
-    | { ok: true; user: SessionUser }
-    | { ok: false; error: string } {
-    const name = input.name.trim();
-    const surname = input.surname.trim();
-    if (!name || !surname) return { ok: false, error: "Name and surname are required." };
-    const key = makeKey(name, surname);
-    const acc = accounts.find((a) => a.key === key);
-    if (!acc) return { ok: false, error: "No account found. Try signing up first." };
-    // If the account has a password set, require it to match.
-    if (acc.password && acc.password !== (input.password ?? "")) {
-      return { ok: false, error: "Incorrect password." };
+  async signIn(input: { name?: string; surname?: string; email?: string; password?: string }) {
+    const email = (input.email ?? "").trim().toLowerCase();
+    const password = input.password ?? "";
+    if (!email || !password) {
+      return { ok: false as const, error: "Email and password are required." };
     }
-    session = toSession(acc);
-    persist();
-    emit();
-    return { ok: true, user: session };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { ok: false as const, error: error.message };
+    if (!data.user) return { ok: false as const, error: "Sign-in failed." };
+    await refreshFromSupabaseUser(data.user.id, data.user.email ?? null);
+    return { ok: true as const, user: session! };
   },
 
-  signOut() {
+  async signOut() {
+    await supabase.auth.signOut();
     session = null;
-    persist();
+    adminFlag = false;
     emit();
   },
 
-  updateProfile(input: { email?: string; password?: string }):
-    | { ok: true; user: SessionUser }
-    | { ok: false; error: string } {
-    if (!session) return { ok: false, error: "Not signed in." };
-    const idx = accounts.findIndex((a) => a.id === session!.id);
-    if (idx === -1) return { ok: false, error: "Account not found." };
-    const acc = accounts[idx];
-    const updated: Account = {
-      ...acc,
-      email: input.email && input.email.trim() ? input.email.trim().toLowerCase() : undefined,
-      password: input.password && input.password.trim() ? input.password : acc.password,
-    };
-    accounts = [...accounts.slice(0, idx), updated, ...accounts.slice(idx + 1)];
-    session = toSession(updated);
-    persist();
-    emit();
-    return { ok: true, user: session };
-  },
-
-  clearPassword(): { ok: true } | { ok: false; error: string } {
-    if (!session) return { ok: false, error: "Not signed in." };
-    const idx = accounts.findIndex((a) => a.id === session!.id);
-    if (idx === -1) return { ok: false, error: "Account not found." };
-    accounts = [
-      ...accounts.slice(0, idx),
-      { ...accounts[idx], password: undefined },
-      ...accounts.slice(idx + 1),
-    ];
-    persist();
-    emit();
-    return { ok: true };
-  },
-
-  deleteCurrentAccount(): { ok: true } | { ok: false; error: string } {
-    if (!session) return { ok: false, error: "Not signed in." };
-    if (session.name.trim().toLowerCase() === "admin" && session.surname.trim().toLowerCase() === "admin") {
-      return { ok: false, error: "The admin account cannot be deleted." };
+  async updateProfile(input: { email?: string; password?: string; name?: string; surname?: string }) {
+    if (!session) return { ok: false as const, error: "Not signed in." };
+    const patch: Record<string, unknown> = {};
+    if (input.name !== undefined) patch.name = input.name.trim();
+    if (input.surname !== undefined) patch.surname = input.surname.trim();
+    if (input.email !== undefined && input.email.trim()) patch.email = input.email.trim().toLowerCase();
+    if (Object.keys(patch).length > 0) {
+      const { error } = await supabase.from("profiles").update(patch).eq("id", session.id);
+      if (error) return { ok: false as const, error: error.message };
     }
-    accounts = accounts.filter((a) => a.id !== session!.id);
+    if (input.password && input.password.trim()) {
+      const { error } = await supabase.auth.updateUser({ password: input.password });
+      if (error) return { ok: false as const, error: error.message };
+    }
+    await refreshFromSupabaseUser(session.id, session.email ?? null);
+    return { ok: true as const, user: session! };
+  },
+
+  async deleteCurrentAccount() {
+    // True deletion requires admin/service key; sign out instead and warn the caller.
+    if (!session) return { ok: false as const, error: "Not signed in." };
+    await supabase.auth.signOut();
     session = null;
-    persist();
+    adminFlag = false;
     emit();
-    return { ok: true };
+    return { ok: true as const };
   },
 
   getSession() {
     return session;
   },
 
-  listAccounts(): Account[] {
-    return accounts;
+  // Kept for compatibility with the previous in-memory API. Returns empty —
+  // the export pipeline now fetches profiles directly from the database.
+  listAccounts(): Array<{ id: string; name: string; surname: string; email?: string; createdAt: string }> {
+    return [];
   },
 
   subscribe(l: Listener) {
