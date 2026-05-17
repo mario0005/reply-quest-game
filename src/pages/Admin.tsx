@@ -101,10 +101,14 @@ const Admin = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => {
+                onClick={async () => {
                   if (confirm(t("admin.resetConfirm"))) {
-                    questionsStore.resetToDefaults();
-                    toast.success(t("admin.resetDone"));
+                    try {
+                      await questionsStore.resetToDefaults();
+                      toast.success(t("admin.resetDone"));
+                    } catch (e) {
+                      toast.error(`Reset failed: ${errorMessage(e)}`);
+                    }
                   }
                 }}
               >
@@ -158,10 +162,14 @@ const Admin = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm(t("admin.deleteConfirm"))) {
-                        questionsStore.remove(q.id);
-                        toast.success(t("admin.deleted"));
+                        try {
+                          await questionsStore.remove(q.id);
+                          toast.success(t("admin.deleted"));
+                        } catch (e) {
+                          toast.error(`Delete failed: ${errorMessage(e)}`);
+                        }
                       }
                     }}
                   >
@@ -207,7 +215,7 @@ const Editor = ({ question, onDone }: { question: Question; onDone: () => void }
   const [fbCorrect, setFbCorrect] = useState(question.feedback?.correct ?? "");
   const [fbWrong, setFbWrong] = useState(question.feedback?.wrong ?? "");
 
-  const save = () => {
+  const save = async () => {
     if (!prompt.trim()) return toast.error("Prompt is required");
     const fb = {
       correct: fbCorrect.trim() || undefined,
@@ -230,9 +238,13 @@ const Editor = ({ question, onDone }: { question: Question; onDone: () => void }
       if (list.length === 0) return toast.error("At least one accepted answer required");
       Object.assign(patch, { acceptedAnswers: list });
     }
-    questionsStore.update(question.id, patch);
-    toast.success("Saved");
-    onDone();
+    try {
+      await questionsStore.update(question.id, patch);
+      toast.success("Saved");
+      onDone();
+    } catch (e) {
+      toast.error(`Save failed: ${errorMessage(e)}`);
+    }
   };
 
   return (
