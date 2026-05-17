@@ -26,15 +26,20 @@ const Admin = () => {
   if (!user) return <Navigate to="/auth" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  const addNew = (type: Question["type"]) => {
+  const addNew = async (type: Question["type"]) => {
     const base =
       type === "multiple_choice"
         ? { type: "multiple_choice" as const, prompt: "New question", options: ["A", "B", "C", "D"], correctIndex: 0, points: 10 }
         : type === "true_false"
         ? { type: "true_false" as const, prompt: "New question", correct: true, points: 5 }
         : { type: "text" as const, prompt: "New question", acceptedAnswers: ["answer"], points: 10 };
-    questionsStore.add(base);
-    toast.success(t("admin.added"));
+    try {
+      await questionsStore.add(base);
+      toast.success(t("admin.added"));
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error(`Add failed: ${msg}. You likely need the 'admin' role in user_roles.`);
+    }
   };
 
   const handleExport = (format: ExportFormat) => {

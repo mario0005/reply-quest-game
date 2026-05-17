@@ -132,17 +132,16 @@ export const questionsStore = {
     row.type = q.type;
     const { error } = await supabase.from("questions").insert(row);
     if (error) {
-      console.error(error);
-      return;
+      console.error("questions.add failed", error);
+      throw error;
     }
     await loadQuestions();
   },
   async resetToDefaults() {
-    // Destructive: deletes all rows. Admin only (RLS enforces it).
     const { error } = await supabase.from("questions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
     if (error) {
-      console.error(error);
-      return;
+      console.error("questions.reset failed", error);
+      throw error;
     }
     await loadQuestions();
   },
