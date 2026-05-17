@@ -223,7 +223,7 @@ export const questionsStore = {
     const { error } = await supabase.from("questions").delete().eq("id", id);
     if (error) {
       console.error(error);
-      return;
+      throw error;
     }
     await loadQuestions();
   },
