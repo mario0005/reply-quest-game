@@ -111,6 +111,87 @@ function questionToRow(q: Partial<Question> & { type?: Question["type"] }) {
   return row;
 }
 
+function questionToLegacyRow(q: Partial<Question> & { type?: Question["type"] }) {
+  const type = q.type ?? "multiple_choice";
+  const row: Record<string, unknown> = {};
+  if (q.prompt !== undefined) {
+    row.prompt_en = q.prompt;
+    row.prompt_it = q.prompt;
+  }
+  if (q.points !== undefined) row.points = q.points;
+  if (q.type) row.category = q.type;
+  if ("options" in q) {
+    const options = (q as { options?: string[] }).options ?? [];
+    row.options_en = options;
+    row.options_it = options;
+  }
+  if ("acceptedAnswers" in q) {
+    const accepted = (q as { acceptedAnswers?: string[] }).acceptedAnswers ?? [];
+    row.options_en = accepted;
+    row.options_it = accepted;
+  }
+  if ("correctIndex" in q) row.correct_index = (q as { correctIndex?: number }).correctIndex ?? null;
+  if ("correct" in q) row.correct_index = (q as { correct?: boolean }).correct ? 1 : 0;
+  if (!q.type && type === "multiple_choice" && !("correctIndex" in q) && !("correct" in q)) row.category = type;
+  return row;
+}
+
+function getMissingColumn(error: { message?: string }) {
+  return error.message?.match(/'([^']+)' column/)?.[1];
+}
+
+function shapeFromMissingColumn(column?: string): QuestionTableShape | null {
+  if (!column) return null;
+  if (["prompt", "options", "correct_bool", "accepted_answers", "feedback_correct", "feedback_wrong", "type"].includes(column)) {
+    return "legacy";
+  }
+  if (["prompt_en", "prompt_it", "options_en", "options_it", "category"].includes(column)) return "modern";
+  return null;
+}
+
+async function writeQuestion(
+  action: "insert" | "update",
+  q: Partial<Question> & { type?: Question["type"] },
+  id?: string,
+) {
+  const shapes: QuestionTableShape[] = tableShape ? [tableShape] : ["modern", "legacy"];
+  let lastError: unknown = null;
+
+  for (const shape of shapes) {
+    const row = shape === "modern" ? questionToRow(q) : questionToLegacyRow(q);
+    if (q.type) {
+      if (shape === "modern") row.type = q.type;
+      else row.category = q.type;
+    }
+    const query = action === "insert"
+      ? supabase.from("questions").insert(row)
+      : supabase.from("questions").update(row).eq("id", id!);
+    const { error } = await query;
+    if (!error) {
+      tableShape = shape;
+      return;
+    }
+    lastError = error;
+    if (!isMissingColumnError(error)) break;
+    tableShape = shapeFromMissingColumn(getMissingColumn(error));
+    if (tableShape && !shapes.includes(tableShape)) {
+      const retryRow = tableShape === "modern" ? questionToRow(q) : questionToLegacyRow(q);
+      if (q.type) {
+        if (tableShape === "modern") retryRow.type = q.type;
+        else retryRow.category = q.type;
+      }
+      const retryQuery = action === "insert"
+        ? supabase.from("questions").insert(retryRow)
+        : supabase.from("questions").update(retryRow).eq("id", id!);
+      const retry = await retryQuery;
+      if (!retry.error) return;
+      lastError = retry.error;
+    }
+  }
+
+  throw lastError;
+}
+
 export async function loadQuestions() {
   const { data, error } = await supabase
     .from("questions")
