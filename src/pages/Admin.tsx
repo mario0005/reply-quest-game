@@ -17,6 +17,14 @@ import type { Question } from "@/data/mockQuestions";
 import { exportData, type ExportFormat } from "@/lib/exportData";
 import { toast } from "sonner";
 
+const errorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    return String((error as { message?: unknown }).message);
+  }
+  return String(error);
+};
+
 const Admin = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { t } = useTranslation();
@@ -37,8 +45,7 @@ const Admin = () => {
       await questionsStore.add(base);
       toast.success(t("admin.added"));
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Add failed: ${msg}. You likely need the 'admin' role in user_roles.`);
+      toast.error(`Add failed: ${errorMessage(e)}`);
     }
   };
 
