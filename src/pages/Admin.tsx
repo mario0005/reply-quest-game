@@ -17,6 +17,14 @@ import type { Question } from "@/data/mockQuestions";
 import { exportData, type ExportFormat } from "@/lib/exportData";
 import { toast } from "sonner";
 
+const errorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    return String((error as { message?: unknown }).message);
+  }
+  return String(error);
+};
+
 const Admin = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { t } = useTranslation();
@@ -37,8 +45,7 @@ const Admin = () => {
       await questionsStore.add(base);
       toast.success(t("admin.added"));
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Add failed: ${msg}. You likely need the 'admin' role in user_roles.`);
+      toast.error(`Add failed: ${errorMessage(e)}`);
     }
   };
 
@@ -94,10 +101,14 @@ const Admin = () => {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => {
+                onClick={async () => {
                   if (confirm(t("admin.resetConfirm"))) {
-                    questionsStore.resetToDefaults();
-                    toast.success(t("admin.resetDone"));
+                    try {
+                      await questionsStore.resetToDefaults();
+                      toast.success(t("admin.resetDone"));
+                    } catch (e) {
+                      toast.error(`Reset failed: ${errorMessage(e)}`);
+                    }
                   }
                 }}
               >
@@ -151,10 +162,14 @@ const Admin = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => {
+                    onClick={async () => {
                       if (confirm(t("admin.deleteConfirm"))) {
-                        questionsStore.remove(q.id);
-                        toast.success(t("admin.deleted"));
+                        try {
+                          await questionsStore.remove(q.id);
+                          toast.success(t("admin.deleted"));
+                        } catch (e) {
+                          toast.error(`Delete failed: ${errorMessage(e)}`);
+                        }
                       }
                     }}
                   >
@@ -200,7 +215,7 @@ const Editor = ({ question, onDone }: { question: Question; onDone: () => void }
   const [fbCorrect, setFbCorrect] = useState(question.feedback?.correct ?? "");
   const [fbWrong, setFbWrong] = useState(question.feedback?.wrong ?? "");
 
-  const save = () => {
+  const save = async () => {
     if (!prompt.trim()) return toast.error("Prompt is required");
     const fb = {
       correct: fbCorrect.trim() || undefined,
@@ -223,9 +238,13 @@ const Editor = ({ question, onDone }: { question: Question; onDone: () => void }
       if (list.length === 0) return toast.error("At least one accepted answer required");
       Object.assign(patch, { acceptedAnswers: list });
     }
-    questionsStore.update(question.id, patch);
-    toast.success("Saved");
-    onDone();
+    try {
+      await questionsStore.update(question.id, patch);
+      toast.success("Saved");
+      onDone();
+    } catch (e) {
+      toast.error(`Save failed: ${errorMessage(e)}`);
+    }
   };
 
   return (
