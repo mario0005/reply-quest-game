@@ -216,11 +216,7 @@ export const questionsStore = {
     return questions;
   },
   async update(id: string, patch: Partial<Question>) {
-    const { error } = await supabase.from("questions").update(questionToRow(patch)).eq("id", id);
-    if (error) {
-      console.error(error);
-      return;
-    }
+    await writeQuestion("update", patch, id);
     await loadQuestions();
   },
   async remove(id: string) {
@@ -232,13 +228,7 @@ export const questionsStore = {
     await loadQuestions();
   },
   async add(q: Omit<Question, "id"> & { id?: string }) {
-    const row = questionToRow(q as Partial<Question>);
-    row.type = q.type;
-    const { error } = await supabase.from("questions").insert(row);
-    if (error) {
-      console.error("questions.add failed", error);
-      throw error;
-    }
+    await writeQuestion("insert", q as Partial<Question> & { type: Question["type"] });
     await loadQuestions();
   },
   async resetToDefaults() {
