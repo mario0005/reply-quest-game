@@ -16,28 +16,51 @@ function emit() {
 
 interface Row {
   id: string;
-  type: string;
+  type?: string | null;
   prompt: string | null;
   prompt_en: string | null;
+  prompt_it?: string | null;
+  category?: string | null;
   options: unknown;
+  options_en?: unknown;
+  options_it?: unknown;
   correct_index: number | null;
-  correct_bool: boolean | null;
-  accepted_answers: unknown;
+  correct_bool?: boolean | null;
+  accepted_answers?: unknown;
   points: number;
-  feedback_correct: string | null;
-  feedback_wrong: string | null;
+  feedback_correct?: string | null;
+  feedback_wrong?: string | null;
   created_at: string;
 }
 
+type QuestionTableShape = "modern" | "legacy";
+
+let tableShape: QuestionTableShape | null = null;
+
+function getQuestionType(r: Row): Question["type"] {
+  const value = r.type ?? r.category;
+  if (value === "true_false" || value === "text" || value === "multiple_choice") return value;
+  return "multiple_choice";
+}
+
+function toStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.map(String) : [];
+}
+
+function isMissingColumnError(error: { code?: string; message?: string }) {
+  return error.code === "PGRST204" || /Could not find the '.+' column/i.test(error.message ?? "");
+}
+
 function rowToQuestion(r: Row): Question | null {
-  const prompt = r.prompt ?? r.prompt_en ?? "";
+  const type = getQuestionType(r);
+  const prompt = r.prompt ?? r.prompt_en ?? r.prompt_it ?? "";
   const feedback =
     r.feedback_correct || r.feedback_wrong
       ? { correct: r.feedback_correct ?? undefined, wrong: r.feedback_wrong ?? undefined }
       : undefined;
-  const opts = Array.isArray(r.options) ? (r.options as string[]) : [];
-  const accepted = Array.isArray(r.accepted_answers) ? (r.accepted_answers as string[]) : [];
-  if (r.type === "multiple_choice") {
+  const opts = toStringArray(r.options).length ? toStringArray(r.options) : toStringArray(r.options_en ?? r.options_it);
+  const accepted = toStringArray(r.accepted_answers).length ? toStringArray(r.accepted_answers) : toStringArray(r.options_en);
+  if (type === "multiple_choice") {
     return {
       id: r.id,
       type: "multiple_choice",
@@ -48,17 +71,17 @@ function rowToQuestion(r: Row): Question | null {
       feedback,
     };
   }
-  if (r.type === "true_false") {
+  if (type === "true_false") {
     return {
       id: r.id,
       type: "true_false",
       prompt,
-      correct: !!r.correct_bool,
+      correct: r.correct_bool ?? r.correct_index === 1,
       points: r.points,
       feedback,
     };
   }
-  if (r.type === "text") {
+  if (type === "text") {
     return {
       id: r.id,
       type: "text",
