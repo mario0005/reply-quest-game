@@ -411,5 +411,64 @@ const FeedbackEditor = () => {
   );
 };
 
+const AdminLeaderboard = () => {
+  const { t } = useTranslation();
+  const sessions = useSessions();
+
+  const playerBest = new Map<string, typeof sessions[number]>();
+  [...sessions]
+    .sort((a, b) => (b.score - a.score) || (b.correctCount - a.correctCount))
+    .forEach((s) => {
+      const key = `${s.playerName}|${s.playerSurname}`;
+      if (!playerBest.has(key)) playerBest.set(key, s);
+    });
+  const entries = Array.from(playerBest.values());
+
+  const rankIcon = (i: number) => {
+    if (i === 0) return <Trophy className="h-5 w-5 text-mustard" />;
+    if (i === 1) return <Medal className="h-5 w-5 text-muted-foreground" />;
+    if (i === 2) return <Award className="h-5 w-5 text-accent" />;
+    return <span className="font-serif text-lg font-bold text-muted-foreground">{i + 1}</span>;
+  };
+
+  return (
+    <section className="paper-card mb-6 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-serif text-xl font-bold">{t("lb.title")}</h2>
+        <Link to="/leaderboard" className="font-serif text-sm underline underline-offset-4">
+          {t("lb.title")} →
+        </Link>
+      </div>
+      <div className="ink-rule my-4" />
+      {entries.length === 0 ? (
+        <p className="py-6 text-center font-body text-sm text-muted-foreground">{t("lb.empty")}</p>
+      ) : (
+        <ul className="space-y-2">
+          {entries.map((entry, i) => (
+            <li
+              key={entry.id}
+              className="flex items-center gap-4 rounded-lg border-2 border-transparent bg-paper-deep/40 px-4 py-2.5 hover:bg-paper-deep/60"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center">{rankIcon(i)}</div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-serif font-semibold">
+                  {entry.playerName || "—"} {entry.playerSurname}
+                </p>
+                <p className="font-body text-xs text-muted-foreground">
+                  {entry.correctCount}/{entry.total} {t("lb.correctOf")}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-serif text-lg font-bold">{entry.score}</p>
+                <p className="font-body text-xs text-muted-foreground">{t("index.points")}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+};
+
 export default Admin;
 
