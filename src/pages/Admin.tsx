@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuestions } from "@/hooks/useQuestionsStore";
+import { useSessions } from "@/hooks/useResponsesStore";
 import { useTranslation } from "@/hooks/useTranslation";
 import { questionsStore } from "@/data/questionsStore";
 import { responsesStore } from "@/data/responsesStore";
@@ -16,6 +17,7 @@ import { useFeedbackData } from "@/hooks/useFeedbackMessages";
 import type { Question } from "@/data/mockQuestions";
 import { exportData, type ExportFormat } from "@/lib/exportData";
 import { toast } from "sonner";
+import { Trophy, Medal, Award } from "lucide-react";
 
 const errorMessage = (error: unknown) => {
   if (error instanceof Error) return error.message;
