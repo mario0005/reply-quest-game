@@ -33,17 +33,21 @@ const Index = () => {
     setStage("playing");
   };
 
-  const handleAnswer = (correct: boolean, pts: number, answerText: string) => {
+  const handleAnswer = async (correct: boolean, pts: number, answerText: string) => {
     const q = questions[idx];
-    responsesStore.addResponse({
-      playerName: user.name,
-      playerSurname: user.surname,
-      questionId: q.id,
-      questionPrompt: q.prompt,
-      answer: answerText,
-      correct,
-      pointsEarned: pts,
-    });
+    try {
+      await responsesStore.addResponse({
+        playerName: user.name,
+        playerSurname: user.surname,
+        questionId: q.id,
+        questionPrompt: q.prompt,
+        answer: answerText,
+        correct,
+        pointsEarned: pts,
+      });
+    } catch (e) {
+      toast.error(`Could not save response: ${e instanceof Error ? e.message : String(e)}`);
+    }
 
     const newScore = score + pts;
     const newCorrect = correctCount + (correct ? 1 : 0);
@@ -51,13 +55,17 @@ const Index = () => {
     setCorrectCount(newCorrect);
 
     if (idx + 1 >= total) {
-      responsesStore.addSession({
-        playerName: user.name,
-        playerSurname: user.surname,
-        score: newScore,
-        correctCount: newCorrect,
-        total,
-      });
+      try {
+        await responsesStore.addSession({
+          playerName: user.name,
+          playerSurname: user.surname,
+          score: newScore,
+          correctCount: newCorrect,
+          total,
+        });
+      } catch (e) {
+        toast.error(`Could not save session: ${e instanceof Error ? e.message : String(e)}`);
+      }
       setStage("result");
     } else {
       setIdx((i) => i + 1);
