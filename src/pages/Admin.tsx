@@ -144,6 +144,8 @@ const Admin = () => {
           </div>
         </section>
 
+        <AdminLeaderboard />
+
         <FeedbackEditor />
 
         <ul className="grid gap-4">
