@@ -63,8 +63,16 @@ const Admin = () => {
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Lora:wght@400;500;600&display=swap"
       />
       <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-6 flex items-center justify-between font-serif text-sm">
-          <Link to="/" className="underline underline-offset-4">{t("common.back")}</Link>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 font-serif text-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/" className="underline underline-offset-4">{t("common.back")}</Link>
+            <Link
+              to="/leaderboard"
+              className="text-primary underline underline-offset-4 hover:text-primary/80"
+            >
+              {t("nav.leaderboard")}
+            </Link>
+          </div>
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <Link
