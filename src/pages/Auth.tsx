@@ -65,7 +65,7 @@ const Auth = () => {
           return;
         }
         toast.success(`${t("auth.welcomeBack")}, ${res.user.name || res.user.email}!`);
-        navigate("/");
+        navigate("/onboarding");
       }
     } finally {
       setBusy(false);
