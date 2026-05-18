@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import type { StoredResponse, StoredSession } from "@/data/responsesStore";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -107,10 +107,29 @@ async function preferencesAsRows() {
   });
 }
 
+function escapeCSVCell(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const str = String(value);
+  if (/[",\n\r]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+  return str;
+}
+
 function toCSV(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
-  const ws = XLSX.utils.json_to_sheet(rows);
-  return XLSX.utils.sheet_to_csv(ws);
+  const headers = Object.keys(rows[0]);
+  const lines = [headers.map(escapeCSVCell).join(",")];
+  for (const row of rows) {
+    lines.push(headers.map((h) => escapeCSVCell(row[h])).join(","));
+  }
+  return lines.join("\n");
+}
+
+function addSheet(wb: ExcelJS.Workbook, name: string, rows: Record<string, unknown>[]) {
+  const ws = wb.addWorksheet(name);
+  if (rows.length === 0) return;
+  const headers = Object.keys(rows[0]);
+  ws.columns = headers.map((h) => ({ header: h, key: h }));
+  rows.forEach((r) => ws.addRow(r));
 }
 
 export async function exportData(
@@ -122,14 +141,14 @@ export async function exportData(
   const prefsRows = await preferencesAsRows();
 
   if (format === "xlsx") {
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(leaderboardAsRows(sessions)), "Leaderboard");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sessionsAsRows(sessions)), "Sessions");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(responsesAsRows(responses)), "Responses");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prefsRows), "Dietary Preferences");
-    const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const wb = new ExcelJS.Workbook();
+    addSheet(wb, "Leaderboard", leaderboardAsRows(sessions));
+    addSheet(wb, "Sessions", sessionsAsRows(sessions));
+    addSheet(wb, "Responses", responsesAsRows(responses));
+    addSheet(wb, "Dietary Preferences", prefsRows);
+    const buf = await wb.xlsx.writeBuffer();
     triggerDownload(
-      new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+      new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
       `parlour-quiz-export-${ts}.xlsx`,
     );
     return;
