@@ -90,12 +90,22 @@ supabase.auth.onAuthStateChange(() => {
 });
 reloadAll();
 
+// Some legacy/installed schemas may not have player_name/player_surname columns.
+// If the first insert fails with a missing-column error (PGRST204 / 42703), retry
+// without those optional columns so the core data still gets persisted.
+const isMissingColumnError = (err: unknown) => {
+  if (!err || typeof err !== "object") return false;
+  const e = err as { code?: string; message?: string };
+  if (e.code === "PGRST204" || e.code === "42703") return true;
+  return typeof e.message === "string" && /column .* does not exist|Could not find the .* column/i.test(e.message);
+};
+
 export const responsesStore = {
   async addResponse(input: Omit<StoredResponse, "id" | "answeredAt">) {
     const { data: auth } = await supabase.auth.getUser();
     const userId = auth.user?.id;
-    if (!userId) return null;
-    const { error } = await supabase.from("responses").insert({
+    if (!userId) throw new Error("Not signed in");
+    const full = {
       user_id: userId,
       question_id: input.questionId || null,
       question_prompt: input.questionPrompt,
@@ -104,23 +114,39 @@ export const responsesStore = {
       points_earned: input.pointsEarned,
       player_name: input.playerName,
       player_surname: input.playerSurname,
-    });
-    if (error) console.error("addResponse", error);
+    };
+    let { error } = await supabase.from("responses").insert(full);
+    if (error && isMissingColumnError(error)) {
+      const { player_name, player_surname, ...minimal } = full;
+      ({ error } = await supabase.from("responses").insert(minimal));
+    }
+    if (error) {
+      console.error("addResponse", error);
+      throw new Error(error.message ?? "Failed to save response");
+    }
     await loadResponses();
   },
   async addSession(input: Omit<StoredSession, "id" | "finishedAt">) {
     const { data: auth } = await supabase.auth.getUser();
     const userId = auth.user?.id;
-    if (!userId) return null;
-    const { error } = await supabase.from("game_sessions").insert({
+    if (!userId) throw new Error("Not signed in");
+    const full = {
       user_id: userId,
       score: input.score,
       correct_count: input.correctCount,
       total: input.total,
       player_name: input.playerName,
       player_surname: input.playerSurname,
-    });
-    if (error) console.error("addSession", error);
+    };
+    let { error } = await supabase.from("game_sessions").insert(full);
+    if (error && isMissingColumnError(error)) {
+      const { player_name, player_surname, ...minimal } = full;
+      ({ error } = await supabase.from("game_sessions").insert(minimal));
+    }
+    if (error) {
+      console.error("addSession", error);
+      throw new Error(error.message ?? "Failed to save session");
+    }
     await loadSessions();
   },
   getResponses() {
