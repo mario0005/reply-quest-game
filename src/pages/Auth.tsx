@@ -21,8 +21,9 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [justSignedUp, setJustSignedUp] = useState(false);
 
-  if (user) return <Navigate to="/" replace />;
+  if (user && !justSignedUp) return <Navigate to="/" replace />;
 
   const signUpSchema = z.object({
     name: z.string().trim().min(1, t("auth.errNameRequired")).max(60),
