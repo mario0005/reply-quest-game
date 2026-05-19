@@ -52,6 +52,11 @@ const Auth = () => {
           setError(res.error);
           return;
         }
+        if (res.needsEmailConfirmation) {
+          toast.success("Check your email to confirm your account, then sign in.");
+          setMode("signin");
+          return;
+        }
         toast.success(`${t("auth.welcome")}, ${res.user.name || res.user.email}!`);
         setJustSignedUp(true);
         navigate("/onboarding", { replace: true });
