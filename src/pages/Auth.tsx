@@ -53,7 +53,8 @@ const Auth = () => {
           return;
         }
         toast.success(`${t("auth.welcome")}, ${res.user.name || res.user.email}!`);
-        navigate("/onboarding");
+        setJustSignedUp(true);
+        navigate("/onboarding", { replace: true });
       } else {
         const parsed = signInSchema.safeParse({ email, password });
         if (!parsed.success) {
