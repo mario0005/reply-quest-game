@@ -87,7 +87,11 @@ export const authStore = {
       surname: input.surname.trim(),
       email,
     };
-    return { ok: true as const, user };
+    const needsEmailConfirmation = !data.session;
+    if (data.session) {
+      await refreshFromSupabaseUser(data.user.id, data.user.email ?? null);
+    }
+    return { ok: true as const, user, needsEmailConfirmation };
   },
 
   async signIn(input: { name?: string; surname?: string; email?: string; password?: string }) {
