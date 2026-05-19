@@ -443,11 +443,29 @@ const AdminLeaderboard = () => {
     <section className="paper-card mb-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-serif text-xl font-bold">{t("lb.title")}</h2>
-        <Link to="/leaderboard" className="font-serif text-sm underline underline-offset-4">
-          {t("lb.title")} →
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link to="/leaderboard" className="font-serif text-sm underline underline-offset-4">
+            {t("lb.title")} →
+          </Link>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              if (!confirm("Do you really want to reset the leaderboard? This will delete all game sessions and responses.")) return;
+              try {
+                await responsesStore.clear();
+                toast.success("Leaderboard reset.");
+              } catch (e) {
+                toast.error(`Reset failed: ${errorMessage(e)}`);
+              }
+            }}
+          >
+            Reset leaderboard
+          </Button>
+        </div>
       </div>
       <div className="ink-rule my-4" />
+
       {entries.length === 0 ? (
         <p className="py-6 text-center font-body text-sm text-muted-foreground">{t("lb.empty")}</p>
       ) : (
