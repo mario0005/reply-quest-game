@@ -70,7 +70,7 @@ export const authStore = {
     if (!email || !password) {
       return { ok: false as const, error: "Email and password are required to sign up." };
     }
-    const redirectTo = `${window.location.origin}/`;
+    const redirectTo = `${window.location.origin}/onboarding`;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
