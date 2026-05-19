@@ -119,6 +119,10 @@ function questionToLegacyRow(q: Partial<Question> & { type?: Question["type"] })
     row.prompt_it = q.prompt;
   }
   if (q.points !== undefined) row.points = q.points;
+  if (q.feedback !== undefined) {
+    row.feedback_correct = q.feedback?.correct ?? null;
+    row.feedback_wrong = q.feedback?.wrong ?? null;
+  }
   if (q.type) row.category = q.type;
   if ("options" in q) {
     const options = (q as { options?: string[] }).options ?? [];
